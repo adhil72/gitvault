@@ -22,6 +22,17 @@ jobs:
     outputs:
       release_id: ${{ steps.create.outputs.release_id }}
     steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      # The updater compares this version with the running app, so it must match the tag.
+      - name: Check the tag matches the app version
+        run: |
+          version=$(jq -r .version apps/desktop/src-tauri/tauri.conf.json)
+          if [ "v$version" != "$TAG" ]; then
+            echo "::error::Tag $TAG does not match tauri.conf.json version $version"
+            exit 1
+          fi
       - id: create
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -60,10 +71,90 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
+      # Optional: signs the Windows installers when a certificate is configured.
+      # Without the secrets the build still works but SmartScreen warns users.
+      - name: Import Windows code-signing certificate
+        id: winsign
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: |
+          if (-not $env:WINDOWS_CERTIFICATE) {
+            Write-Host "::warning::WINDOWS_CERTIFICATE is not set; Windows installers will be unsigned"
+            exit 0
+          }
+          $pfx = Join-Path $env:RUNNER_TEMP 'codesign.pfx'
+          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE))
+          $password = ConvertTo-SecureString $env:WINDOWS_CERTIFICATE_PASSWORD -AsPlainText -Force
+          $cert = Import-PfxCertificate -FilePath $pfx -CertStoreLocation Cert:\CurrentUser\My -Password $password
+          Remove-Item $pfx
+          $config = Join-Path $env:RUNNER_TEMP 'signing.json'
+          @{ bundle = @{ windows = @{
+            certificateThumbprint = $cert.Thumbprint
+            digestAlgorithm = 'sha256'
+            timestampUrl = 'http://timestamp.digicert.com'
+          } } } | ConvertTo-Json -Depth 5 | Set-Content $config
+          "args=--config $config" >> $env:GITHUB_OUTPUT
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Signs the update artifacts (.sig); the app verifies them with the public key in tauri.conf.json.
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           projectPath: apps/desktop
           releaseId: ${{ needs.create-release.outputs.release_id }}
-          args: --bundles ${{ matrix.bundles }}
+          # latest.json is built in the publish job so its URLs point at the public releases repo.
+          includeUpdaterJson: false
+          args: --bundles ${{ matrix.bundles }} ${{ steps.winsign.outputs.args }}
+
+  # The source repository is private, so installers and the update feed are
+  # copied to a public releases repository (as a draft: publishing stays manual).
+  publish:
+    needs: [create-release, release]
+    runs-on: ubuntu-latest
+    env:
+      PUBLIC_REPO: adhil72/gitvault-releases
+    steps:
+      - name: Download the built assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_ID: ${{ needs.create-release.outputs.release_id }}
+        run: |
+          mkdir dist
+          gh api "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets" --paginate \
+            --jq '.[] | "\(.id) \(.name)"' | while read -r id name; do
+            gh api -H "Accept: application/octet-stream" "repos/$GITHUB_REPOSITORY/releases/assets/$id" > "dist/$name"
+          done
+          ls -l dist
+      - name: Write checksums and the update feed
+        run: |
+          cd dist
+          version="${TAG#v}"
+          base="https://github.com/$PUBLIC_REPO/releases/download/$TAG"
+          exe=$(ls ./*-setup.exe | head -n1 | xargs basename)
+          appimage=$(ls ./*.AppImage | head -n1 | xargs basename)
+          jq -n --arg version "$version" --arg date "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --arg exe_url "$base/$exe" --arg exe_sig "$(cat "$exe.sig")" \
+            --arg app_url "$base/$appimage" --arg app_sig "$(cat "$appimage.sig")" \
+            '{version: $version, pub_date: $date, notes: "",
+              platforms: {
+                "windows-x86_64": {signature: $exe_sig, url: $exe_url},
+                "linux-x86_64": {signature: $app_sig, url: $app_url}
+              }}' > latest.json
+          sha256sum -- *.exe *.msi *.deb *.AppImage > SHA256SUMS
+          cat SHA256SUMS
+      - name: Create the draft release in the public repository
+        env:
+          GH_TOKEN: ${{ secrets.RELEASES_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::warning::RELEASES_TOKEN is not set; nothing was copied to $PUBLIC_REPO"
+            exit 0
+          fi
+          cd dist
+          gh release create "$TAG" --repo "$PUBLIC_REPO" --draft --title "GitVault $TAG" \
+            --notes "Verify downloads with \`sha256sum -c SHA256SUMS --ignore-missing\`." \
+            ./*.exe ./*.exe.sig ./*.msi ./*.deb ./*.AppImage ./*.AppImage.sig latest.json SHA256SUMS

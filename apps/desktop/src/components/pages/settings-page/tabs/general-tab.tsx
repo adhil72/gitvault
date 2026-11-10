@@ -8,6 +8,7 @@ import { useSettings, useUpdateSettings } from '@/hooks/use-settings'
 import type { Settings } from '@/types'
 
 import { SettingsCard, SettingsRow } from '../settings-row'
+import { UpdatesRow } from './updates-row'
 
 const MINUTES = [
   ['1', '1 minute'],
@@ -84,6 +85,7 @@ export function GeneralTab() {
             onCheckedChange={(auto_sync) => save({ auto_sync })}
           />
         </SettingsRow>
+        <UpdatesRow />
       </SettingsCard>
     </>
   )

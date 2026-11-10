@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react'
 
 import { TitleBar } from '@/components/general/title-bar'
+import { UpdateNotifier } from '@/components/general/update-notifier'
 import { useWindowControls } from '@/hooks/use-window'
 
 const TITLEBAR_HEIGHT = '36px'
@@ -12,6 +13,7 @@ export function RootFrame({ children }: { children: ReactNode }) {
   return (
     <div className="pt-(--titlebar-h)" style={style}>
       <TitleBar />
+      <UpdateNotifier />
       {children}
     </div>
   )
