@@ -1,0 +1,54 @@
+[workspace]
+resolver = "2"
+members = [
+  "crates/gitvault-crypto",
+  "crates/gitvault-core",
+  "crates/gitvault-infra",
+  "crates/gitvault-cli",
+  "apps/desktop/src-tauri",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+rust-version = "1.85"
+
+[workspace.dependencies]
+# Internal crates (dependency direction: crypto <- core <- infra <- cli / desktop)
+gitvault-crypto = { path = "crates/gitvault-crypto" }
+gitvault-core = { path = "crates/gitvault-core" }
+gitvault-infra = { path = "crates/gitvault-infra" }
+
+# Shared third-party crates (versions are pinned here once)
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+anyhow = "1"
+async-trait = "0.1"
+uuid = { version = "1", features = ["v4"] }
+schemars = "0.8"
+ts-rs = "10"
+zeroize = { version = "1", features = ["derive"] }
+clap = { version = "4", features = ["derive"] }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+dbg_macro = "deny"
+todo = "deny"
+too_many_arguments = "deny"
+too_many_lines = "warn"
+cognitive_complexity = "warn"
+
+# Applies to the Tauri app (profiles must live at the workspace root)
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
+panic = "abort"
+strip = true

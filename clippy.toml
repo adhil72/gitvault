@@ -1,0 +1,7 @@
+# `self` counts as an argument, so 6 means "self plus 5".
+too-many-arguments-threshold = 6
+too-many-lines-threshold = 40
+cognitive-complexity-threshold = 12
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
+allow-panic-in-tests = true
