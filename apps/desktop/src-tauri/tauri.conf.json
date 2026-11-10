@@ -49,9 +49,7 @@
   "plugins": {
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IERDMDIyQTIxN0JFNEZBRDYKUldUVyt1UjdJU29DM05ZN3ZIcjlKR2Y2YlkrZmFnOFdEYm9raGNMRUYvZG5aUHRGdnBjWnlqYloK",
-      "endpoints": [
-        "https://github.com/adhil72/gitvault-releases/releases/latest/download/latest.json"
-      ],
+      "endpoints": ["https://adhil72.github.io/gitvault-website/releases/latest.json"],
       "windows": {
         "installMode": "passive"
       }
