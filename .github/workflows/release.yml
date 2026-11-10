@@ -126,15 +126,15 @@ jobs:
               --input "$f" > /dev/null
           done
 
-  # The source repository is private, so installers and the update feed are
-  # served from the public website repository (GitHub Pages). They arrive as a
-  # pull request there: merging it is what publishes the release.
+  # The source repository is private, so releases are published to the public
+  # website repository, which also hosts the site. The release is created as a
+  # draft: publishing it (in the GitHub UI) is what makes it, and the update
+  # feed, public.
   publish:
     needs: [create-release, release]
     runs-on: ubuntu-latest
     env:
-      WEBSITE_REPO: adhil72/gitvault-website
-      WEBSITE_URL: https://adhil72.github.io/gitvault-website
+      PUBLIC_REPO: adhil72/gitvault-website
     steps:
       - name: Download the built assets
         env:
@@ -147,11 +147,11 @@ jobs:
             gh api -H "Accept: application/octet-stream" "repos/$GITHUB_REPOSITORY/releases/assets/$id" > "dist/$name"
           done
           ls -l dist
-      - name: Write checksums, the update feed and the download manifest
+      - name: Write checksums, stable download names and the update feed
         run: |
           cd dist
           version="${TAG#v}"
-          base="$WEBSITE_URL/releases"
+          base="https://github.com/$PUBLIC_REPO/releases/download/$TAG"
           exe=$(basename "$(ls ./*-setup.exe | head -n1)")
           appimage=$(basename "$(ls ./*.AppImage | head -n1)")
           jq -n --arg version "$version" --arg date "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
@@ -163,29 +163,21 @@ jobs:
                 "linux-x86_64": {signature: $app_sig, url: $app_url}
               }}' > latest.json
           sha256sum -- *.exe *.msi *.deb *.AppImage > SHA256SUMS
-          # Read by the website at build time to link the downloads.
-          jq -Rn --arg version "$version" '{version: $version, files: [inputs | split("  ") | {sha256: .[0], name: .[1]}]}' \
-            < SHA256SUMS > release.json
           cat SHA256SUMS
-      - name: Open a pull request with the release in the website repository
+          # Version-free copies let the website link to releases/latest/download/<name> forever.
+          cp "$exe" GitVault-setup.exe
+          cp ./*.msi GitVault.msi
+          cp ./*.deb GitVault.deb
+          cp "$appimage" GitVault.AppImage
+      - name: Create the draft release in the public repository
         env:
           GH_TOKEN: ${{ secrets.WEBSITE_TOKEN }}
         run: |
           if [ -z "$GH_TOKEN" ]; then
-            echo "::warning::WEBSITE_TOKEN is not set; nothing was sent to $WEBSITE_REPO"
+            echo "::warning::WEBSITE_TOKEN is not set; nothing was sent to $PUBLIC_REPO"
             exit 0
           fi
-          git clone --depth 1 "https://x-access-token:$GH_TOKEN@github.com/$WEBSITE_REPO.git" site
-          cd site
-          git checkout -b "release/$TAG"
-          # Only the latest release is kept on the site so the repository stays small.
-          rm -rf public/releases && mkdir -p public/releases
-          cp ../dist/*.exe ../dist/*.exe.sig ../dist/*.msi ../dist/*.deb ../dist/*.AppImage ../dist/*.AppImage.sig \
-            ../dist/latest.json ../dist/SHA256SUMS ../dist/release.json public/releases/
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A && git commit -m "release: GitVault $TAG"
-          git push origin "release/$TAG"
-          gh pr create --repo "$WEBSITE_REPO" --head "release/$TAG" --base main \
-            --title "Release GitVault $TAG" \
-            --body "Merging publishes $TAG: the installers, SHA256SUMS and the auto-update feed (latest.json)."
+          cd dist
+          gh release create "$TAG" --repo "$PUBLIC_REPO" --draft --title "GitVault $TAG" \
+            --notes "Verify downloads with \`sha256sum -c SHA256SUMS --ignore-missing\`." \
+            ./*.exe ./*.exe.sig ./*.msi ./*.deb ./*.AppImage ./*.AppImage.sig latest.json SHA256SUMS
