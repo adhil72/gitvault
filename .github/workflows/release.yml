@@ -37,11 +37,12 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          url=$(gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --draft --verify-tag \
-            --title "GitVault $TAG" \
-            --notes "See the assets below to download GitVault for your platform.")
-          # A draft's tag_name is "untagged-…" in the API, so find it by its URL.
-          id=$(gh api "repos/$GITHUB_REPOSITORY/releases" --jq ".[] | select(.html_url==\"$url\") | .id")
+          # Created through the API so the id comes straight back (listing releases right
+          # after creating one can miss it).
+          id=$(gh api --method POST "repos/$GITHUB_REPOSITORY/releases" \
+            -f tag_name="$TAG" -f name="GitVault $TAG" \
+            -f body="See the assets below to download GitVault for your platform." \
+            -F draft=true --jq .id)
           test -n "$id"
           echo "release_id=$id" >> "$GITHUB_OUTPUT"
 
