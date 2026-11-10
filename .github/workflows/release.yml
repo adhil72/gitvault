@@ -37,10 +37,12 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --draft --verify-tag \
+          url=$(gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --draft --verify-tag \
             --title "GitVault $TAG" \
-            --notes "See the assets below to download GitVault for your platform."
-          id=$(gh api "repos/$GITHUB_REPOSITORY/releases" --jq "map(select(.tag_name==\"$TAG\"))[0].id")
+            --notes "See the assets below to download GitVault for your platform.")
+          # A draft's tag_name is "untagged-…" in the API, so find it by its URL.
+          id=$(gh api "repos/$GITHUB_REPOSITORY/releases" --jq ".[] | select(.html_url==\"$url\") | .id")
+          test -n "$id"
           echo "release_id=$id" >> "$GITHUB_OUTPUT"
 
   release:
@@ -109,6 +111,20 @@ jobs:
           # latest.json is built in the publish job so its URLs point at the public releases repo.
           includeUpdaterJson: false
           args: --bundles ${{ matrix.bundles }} ${{ steps.winsign.outputs.args }}
+
+      # tauri-action does not upload the .sig files when it is not building latest.json.
+      - name: Upload update signatures
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_ID: ${{ needs.create-release.outputs.release_id }}
+        run: |
+          find target/release/bundle \( -name '*-setup.exe.sig' -o -name '*.AppImage.sig' \) | while read -r f; do
+            name=$(basename "$f" | sed 's/^git-vault_/GitVault_/')
+            gh api --method POST -H "Content-Type: application/octet-stream" \
+              "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets?name=$name" \
+              --input "$f" > /dev/null
+          done
 
   # The source repository is private, so installers and the update feed are
   # served from the public website repository (GitHub Pages). They arrive as a
