@@ -113,20 +113,6 @@ jobs:
           includeUpdaterJson: false
           args: --bundles ${{ matrix.bundles }} ${{ steps.winsign.outputs.args }}
 
-      # tauri-action does not upload the .sig files when it is not building latest.json.
-      - name: Upload update signatures
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_ID: ${{ needs.create-release.outputs.release_id }}
-        run: |
-          find target/release/bundle \( -name '*-setup.exe.sig' -o -name '*.AppImage.sig' \) | while read -r f; do
-            name=$(basename "$f" | sed 's/^git-vault_/GitVault_/')
-            gh api --method POST -H "Content-Type: application/octet-stream" \
-              "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets?name=$name" \
-              --input "$f" > /dev/null
-          done
-
   # The source repository is private, so releases are published to the public
   # website repository, which also hosts the site. The release is created as a
   # draft: publishing it (in the GitHub UI) is what makes it, and the update
