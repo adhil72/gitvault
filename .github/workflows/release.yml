@@ -53,9 +53,9 @@ jobs:
       matrix:
         include:
           - os: ubuntu-22.04 # oldest LTS keeps the glibc requirement low
-            bundles: deb,appimage
+            bundles: deb
           - os: windows-latest
-            bundles: nsis,msi
+            bundles: nsis
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -140,22 +140,17 @@ jobs:
           version="${TAG#v}"
           base="https://github.com/$PUBLIC_REPO/releases/download/$TAG"
           exe=$(basename "$(ls ./*-setup.exe | head -n1)")
-          appimage=$(basename "$(ls ./*.AppImage | head -n1)")
           jq -n --arg version "$version" --arg date "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             --arg exe_url "$base/$exe" --arg exe_sig "$(cat "$exe.sig")" \
-            --arg app_url "$base/$appimage" --arg app_sig "$(cat "$appimage.sig")" \
             '{version: $version, pub_date: $date, notes: "",
               platforms: {
-                "windows-x86_64": {signature: $exe_sig, url: $exe_url},
-                "linux-x86_64": {signature: $app_sig, url: $app_url}
+                "windows-x86_64": {signature: $exe_sig, url: $exe_url}
               }}' > latest.json
-          sha256sum -- *.exe *.msi *.deb *.AppImage > SHA256SUMS
+          sha256sum -- *.exe *.deb > SHA256SUMS
           cat SHA256SUMS
           # Version-free copies let the website link to releases/latest/download/<name> forever.
           cp "$exe" GitVault-setup.exe
-          cp ./*.msi GitVault.msi
           cp ./*.deb GitVault.deb
-          cp "$appimage" GitVault.AppImage
       - name: Create the draft release in the public repository
         env:
           GH_TOKEN: ${{ secrets.WEBSITE_TOKEN }}
@@ -167,4 +162,4 @@ jobs:
           cd dist
           gh release create "$TAG" --repo "$PUBLIC_REPO" --draft --title "GitVault $TAG" \
             --notes "Verify downloads with \`sha256sum -c SHA256SUMS --ignore-missing\`." \
-            ./*.exe ./*.exe.sig ./*.msi ./*.deb ./*.AppImage ./*.AppImage.sig latest.json SHA256SUMS
+            ./*.exe ./*.exe.sig ./*.deb latest.json SHA256SUMS
