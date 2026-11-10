@@ -1,0 +1,26 @@
+# GitVault (for AI tools)
+
+GitVault stores secrets as encrypted files in the user's own private GitHub repository. The CLI is
+`gitvault`; every feature of the desktop app is available from it through the same services.
+
+## How to use it safely
+- Prefer `gitvault run --environment <env> -- <command>`: secrets reach the process as environment
+  variables and are never printed. Add `--redact` to mask them in the command's output.
+- `gitvault secret get NAME` prints metadata only. `--reveal` / `--raw` print the value and are
+  recorded in the audit log; do not use them unless the user asked for the value.
+- Never pass secret values as arguments. Use `--value-stdin` or `--from-file`.
+- Always pass `--json` for machine-readable output and `--non-interactive` to avoid prompts.
+- If a command exits with code 4 (`E_LOCKED`) the vault is locked: ask the user to run
+  `gitvault unlock`, or use `GITVAULT_SESSION` if they provided one.
+
+## Discover
+- `gitvault commands --json`   every command, argument and flag
+- `gitvault schema`            list JSON Schemas; `gitvault schema SecretSummary` prints one
+- `gitvault mcp`               Model Context Protocol server (metadata and `run_command` only)
+
+## Exit codes
+0 ok · 1 internal · 2 usage · 3 not signed in · 4 vault locked · 5 not found · 6 conflict ·
+7 network · 8 permission denied · 9 validation · 10 wrong password
+Errors in `--json` mode: `{"error":{"code":"E_LOCKED","message":"…","hint":"gitvault unlock"}}`
+
+Reference: docs/cli.md (generated). Architecture: docs/architecture.md.
