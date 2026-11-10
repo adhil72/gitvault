@@ -1,0 +1,26 @@
+{
+  "name": "gitvault",
+  "version": "0.1.0",
+  "description": "Load your GitVault secrets into process.env at startup. No .env files in the project.",
+  "license": "MIT",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    },
+    "./config": "./config.js"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "config.js"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test test/"
+  }
+}

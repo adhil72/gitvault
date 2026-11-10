@@ -1,0 +1,26 @@
+[package]
+name = "gitvault-desktop"
+description = "GitVault desktop app (Tauri shell). Thin command handlers over gitvault-core."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[lib]
+# The `_lib` suffix keeps the library name unique from the binary name (Windows issue).
+name = "gitvault_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+gitvault-core.workspace = true
+gitvault-infra.workspace = true
+serde.workspace = true
+tauri = { version = "2", features = [] }
+tauri-plugin-clipboard-manager = "2"
+tauri-plugin-opener = "2"
+
+[lints]
+workspace = true
