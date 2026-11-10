@@ -1,0 +1,27 @@
+//! Short, easy-to-type words for passphrases.
+
+pub const WORDS: &[&str] = &[
+    "acid", "acre", "aged", "also", "arch", "area", "atom", "aunt", "aura", "avid", "axis", "away",
+    "baby", "back", "bake", "bald", "band", "bank", "barn", "base", "bath", "bead", "beam", "bear",
+    "beef", "bell", "belt", "bend", "best", "bike", "bird", "bite", "blue", "boat", "body", "bold",
+    "bolt", "bone", "book", "boot", "boss", "bowl", "brew", "bulb", "bulk", "bush", "busy", "cafe",
+    "cake", "calm", "camp", "card", "care", "cart", "cash", "cave", "cell", "chef", "chip", "city",
+    "clay", "clip", "club", "coal", "coat", "code", "coin", "cold", "cook", "cool", "cork", "corn",
+    "cost", "crew", "crop", "cube", "cure", "dare", "dark", "data", "dawn", "deal", "dear", "deck",
+    "deep", "deer", "desk", "dial", "dice", "diet", "dime", "dish", "dive", "dock", "dome", "door",
+    "dose", "dove", "down", "draw", "drum", "duck", "dune", "dusk", "dust", "duty", "each", "earn",
+    "ease", "east", "easy", "edge", "emit", "epic", "even", "exit", "face", "fact", "fair", "fame",
+    "farm", "fast", "fate", "fern", "film", "find", "fire", "firm", "fish", "five", "flag", "flat",
+    "flax", "flow", "foam", "fold", "folk", "food", "fork", "form", "fort", "four", "free", "frog",
+    "fuel", "full", "fund", "gain", "gale", "game", "gate", "gear", "gift", "glad", "glow", "goal",
+    "gold", "golf", "good", "gown", "grab", "gray", "grid", "grin", "grow", "gulf", "gust", "hail",
+    "half", "hall", "hand", "hard", "harp", "hawk", "hazy", "heal", "heat", "herb", "hero", "hide",
+    "high", "hill", "hint", "hive", "home", "hood", "hope", "horn", "hunt", "idea", "inch", "iron",
+    "isle", "jade", "jazz", "jolt", "jump", "jury", "keen", "kelp", "kind", "king", "kite", "knit",
+    "lake", "lamb", "lamp", "land", "lane", "lark", "lava", "lawn", "leaf", "lend", "lens", "lily",
+    "line", "lion", "list", "loaf", "lock", "loft", "long", "loop", "lost", "loud", "love", "luck",
+    "lump", "lush", "mail", "main", "many", "mask", "mast", "math", "meal", "mean", "melt", "menu",
+    "mesh", "mild", "mile", "milk", "mind", "mint", "mist", "moat", "mode", "moon", "moss", "move",
+    "much", "myth", "nail", "navy", "neat", "nest", "nine", "node", "note", "oath", "oats",
+    "olive",
+];

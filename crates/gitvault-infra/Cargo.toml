@@ -1,0 +1,23 @@
+[package]
+name = "gitvault-infra"
+description = "Adapters implementing the GitVault core ports, plus the composition root."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+base64 = "0.22"
+dirs = "5"
+gitvault-core.workspace = true
+gitvault-crypto.workspace = true
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
+serde.workspace = true
+serde_json.workspace = true
+uuid.workspace = true
+
+[dev-dependencies]
+tempfile = "3"
+
+[lints]
+workspace = true
