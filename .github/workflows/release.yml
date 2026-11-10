@@ -3,12 +3,37 @@ name: Release
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing tag to build and release (e.g. v0.1.0)
+        required: true
 
 permissions:
   contents: write
 
+env:
+  TAG: ${{ inputs.tag || github.ref_name }}
+
 jobs:
+  # Create the draft once so the parallel platform builds only upload assets to it.
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.create.outputs.release_id }}
+    steps:
+      - id: create
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --draft --verify-tag \
+            --title "GitVault $TAG" \
+            --notes "See the assets below to download GitVault for your platform."
+          id=$(gh api "repos/$GITHUB_REPOSITORY/releases" --jq "map(select(.tag_name==\"$TAG\"))[0].id")
+          echo "release_id=$id" >> "$GITHUB_OUTPUT"
+
   release:
+    needs: create-release
     strategy:
       fail-fast: false
       matrix:
@@ -20,6 +45,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
       - name: Install Tauri system libraries (Linux)
         if: runner.os == 'Linux'
         run: |
@@ -38,9 +65,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           projectPath: apps/desktop
-          tagName: ${{ github.ref_name }}
-          releaseName: GitVault ${{ github.ref_name }}
-          releaseBody: See the assets below to download GitVault for your platform.
-          releaseDraft: true # review the assets, then publish manually
-          prerelease: false
+          releaseId: ${{ needs.create-release.outputs.release_id }}
           args: --bundles ${{ matrix.bundles }}
