@@ -140,11 +140,14 @@ jobs:
           version="${TAG#v}"
           base="https://github.com/$PUBLIC_REPO/releases/download/$TAG"
           exe=$(basename "$(ls ./*-setup.exe | head -n1)")
+          deb=$(basename "$(ls ./*.deb | head -n1)")
           jq -n --arg version "$version" --arg date "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             --arg exe_url "$base/$exe" --arg exe_sig "$(cat "$exe.sig")" \
+            --arg deb_url "$base/$deb" --arg deb_sig "$(cat "$deb.sig")" \
             '{version: $version, pub_date: $date, notes: "",
               platforms: {
-                "windows-x86_64": {signature: $exe_sig, url: $exe_url}
+                "windows-x86_64": {signature: $exe_sig, url: $exe_url},
+                "linux-x86_64-deb": {signature: $deb_sig, url: $deb_url}
               }}' > latest.json
           sha256sum -- *.exe *.deb > SHA256SUMS
           cat SHA256SUMS
@@ -162,7 +165,7 @@ jobs:
           cd dist
           gh release create "$TAG" --repo "$PUBLIC_REPO" --latest --title "GitVault $TAG" \
             --notes "Verify downloads with \`sha256sum -c SHA256SUMS --ignore-missing\`." \
-            ./*.exe ./*.exe.sig ./*.deb latest.json SHA256SUMS
+            ./*.exe ./*.exe.sig ./*.deb ./*.deb.sig latest.json SHA256SUMS
       - name: Publish the release in this repository too
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
