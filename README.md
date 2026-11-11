@@ -7,6 +7,10 @@ Sign in with GitHub, protect each vault with a master password, and use the same
 - **Vault file format:** [docs/vault-format.md](docs/vault-format.md)
 - **CLI reference (generated):** [docs/cli.md](docs/cli.md) · for AI tools: [llms.txt](llms.txt), [AGENTS.md](AGENTS.md)
 
+## Download
+
+Windows (`.exe`) and Ubuntu (`.deb`) installers are published at https://adhil72.github.io/gitvault-website/download/. The Windows app updates itself; every release lists `SHA256SUMS` for verification.
+
 ## What works
 
 |                                                                          | Desktop app | CLI |
