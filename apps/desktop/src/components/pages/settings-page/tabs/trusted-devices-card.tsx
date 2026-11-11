@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { useDevices, useRevokeDevice, useTrustDevice } from '@/hooks/use-devices'
 import { formatDate } from '@/lib/format'
 
-import { SettingsCard, SettingsRow } from '../settings-row'
+import { SettingsGroup, SettingsRow } from '../settings-row'
 
 const DEFAULT_NAME = 'This computer'
 
@@ -16,41 +16,46 @@ export function TrustedDevicesCard({ vaultId }: { vaultId: string }) {
   const revoke = useRevokeDevice(vaultId)
   const trustedHere = devices.some((d) => d.this_device)
   return (
-    <SettingsCard>
-      <SettingsRow
-        title="Trusted devices"
-        description="A trusted device opens this vault without the master password. Revoke one to cut its access."
-      >
-        {trustedHere ? null : (
-          <Button
-            variant="secondary"
-            disabled={trust.isPending}
-            onClick={() =>
-              trust.mutate(DEFAULT_NAME, {
-                onSuccess: () => toast.success('This device is trusted'),
-              })
-            }
-          >
-            Trust this device
-          </Button>
-        )}
-      </SettingsRow>
+    <>
       <ErrorNotice error={trust.error ?? revoke.error} />
-      {devices.map((device) => (
-        <SettingsRow
-          key={device.id}
-          title={device.this_device ? `${device.name} (this device)` : device.name}
-          description={`Trusted ${formatDate(device.created_at)}`}
-        >
-          <Button
-            variant="danger"
-            disabled={revoke.isPending}
-            onClick={() => revoke.mutate(device.id)}
+      <SettingsGroup
+        title="Trusted devices"
+        footer="A trusted device opens this vault without the master password. Revoke one to cut its access."
+      >
+        {devices.map((device) => (
+          <SettingsRow
+            key={device.id}
+            title={device.this_device ? `${device.name} (this device)` : device.name}
+            description={`Trusted ${formatDate(device.created_at)}`}
           >
-            Revoke
-          </Button>
-        </SettingsRow>
-      ))}
-    </SettingsCard>
+            <Button
+              variant="danger"
+              disabled={revoke.isPending}
+              onClick={() => revoke.mutate(device.id)}
+            >
+              Revoke
+            </Button>
+          </SettingsRow>
+        ))}
+        {trustedHere ? null : (
+          <SettingsRow
+            title="Trust this device"
+            description="Skip the master password on this computer."
+          >
+            <Button
+              variant="secondary"
+              disabled={trust.isPending}
+              onClick={() =>
+                trust.mutate(DEFAULT_NAME, {
+                  onSuccess: () => toast.success('This device is trusted'),
+                })
+              }
+            >
+              Trust
+            </Button>
+          </SettingsRow>
+        )}
+      </SettingsGroup>
+    </>
   )
 }

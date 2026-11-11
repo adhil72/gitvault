@@ -51,7 +51,7 @@ export function VaultPage() {
             onImport={() => requireUnlock(() => nav.openPanel('import'))}
           />
         ) : null}
-        <ul className="flex flex-col gap-2 px-6 pb-6">
+        <ul className="flex flex-col gap-2 px-8 pb-6">
           {secrets?.map((secret) => (
             <SecretRow
               key={secret.id}
@@ -75,7 +75,7 @@ export function VaultPage() {
 
 function ListSkeleton() {
   return (
-    <div className="flex flex-col gap-2 px-6">
+    <div className="flex flex-col gap-2 px-8">
       {[0, 1, 2, 3].map((i) => (
         <Skeleton key={i} className="h-[66px] w-full" />
       ))}
@@ -114,7 +114,7 @@ function NoSecrets({
       <Button onClick={() => requireUnlock(goToAddSecret)}>
         <Plus /> Add secret
       </Button>
-      <Button variant="secondary" onClick={onImport}>
+      <Button variant="ghost" onClick={onImport}>
         <Upload /> Import .env
       </Button>
     </EmptyState>

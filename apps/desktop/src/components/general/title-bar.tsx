@@ -18,7 +18,7 @@ export function TitleBar() {
     <div
       data-tauri-drag-region
       onDoubleClick={() => run('toggleMaximize')}
-      className="fixed inset-x-0 top-0 z-[60] flex h-(--titlebar-h) items-center justify-between border-b border-border bg-inset select-none"
+      className="fixed inset-x-0 top-0 z-[60] flex h-(--titlebar-h) items-center justify-between border-b border-border/50 bg-inset select-none"
     >
       <div data-tauri-drag-region className="pointer-events-none flex items-center gap-2 pl-3">
         <LogoMark className="size-4" />

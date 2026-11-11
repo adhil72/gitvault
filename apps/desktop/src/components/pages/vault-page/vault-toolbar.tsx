@@ -21,15 +21,17 @@ interface VaultToolbarProps {
 
 export function VaultToolbar({ count, search, onSort, onImport }: VaultToolbarProps) {
   return (
-    <div className="flex items-center justify-between gap-4 px-6 py-5">
-      <div className="flex items-center gap-3">
-        <h1 className="text-2xl font-bold">{titleFor(search)}</h1>
-        <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+    <div className="flex items-center justify-between gap-4 px-8 pt-7 pb-4">
+      <div className="flex items-baseline gap-3">
+        <h1 className="text-[28px] leading-tight font-semibold tracking-[-0.02em]">
+          {titleFor(search)}
+        </h1>
+        <span className="text-sm text-muted-foreground tabular-nums">
           {count} secret{count === 1 ? '' : 's'}
         </span>
       </div>
       <div className="flex items-center gap-2.5">
-        <div className="w-48">
+        <div className="w-44">
           <SelectField
             id="sort"
             value={search.sort ?? 'updated'}

@@ -19,9 +19,26 @@ fn validate(raw: &str, what: &str) -> Result<(), CoreError> {
 
 macro_rules! id_type {
     ($name:ident, $what:literal) => {
+        // `try_from` makes deserialization (e.g. a cloned repo's vault header) go through the
+        // same validation as `parse`, so an untrusted id can never contain path separators.
         #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
-        #[serde(transparent)]
+        #[serde(try_from = "String", into = "String")]
         pub struct $name(String);
+
+        impl TryFrom<String> for $name {
+            type Error = CoreError;
+
+            fn try_from(raw: String) -> Result<Self, CoreError> {
+                validate(&raw, $what)?;
+                Ok(Self(raw))
+            }
+        }
+
+        impl From<$name> for String {
+            fn from(id: $name) -> Self {
+                id.0
+            }
+        }
 
         impl $name {
             /// Validates and wraps an id.
@@ -71,6 +88,17 @@ mod tests {
         for bad in ["", "..", "a/b", "a\\b", "a.b", "../etc", &"x".repeat(65)] {
             assert!(SecretId::parse(bad).is_err(), "{bad} should be rejected");
         }
+    }
+
+    #[test]
+    fn deserializing_rejects_unsafe_ids() {
+        // A cloned repo controls its header, so deserialization must validate too.
+        for bad in ["\"../../escape\"", "\"a/b\"", "\"\"", "\"a.b\""] {
+            assert!(serde_json::from_str::<VaultId>(bad).is_err(), "{bad}");
+            assert!(serde_json::from_str::<SecretId>(bad).is_err(), "{bad}");
+        }
+        let ok: VaultId = serde_json::from_str("\"7f3c-9a10\"").unwrap();
+        assert_eq!(serde_json::to_string(&ok).unwrap(), "\"7f3c-9a10\"");
     }
 
     #[test]

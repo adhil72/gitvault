@@ -33,7 +33,7 @@ export function AppearanceTab() {
   return (
     <>
       <PageHeading title="Appearance" description="Choose how GitVault looks." />
-      <div className="grid max-w-3xl grid-cols-3 gap-4" role="radiogroup" aria-label="Theme">
+      <div className="grid grid-cols-3 gap-3" role="radiogroup" aria-label="Theme">
         {THEMES.map(({ value, label, icon: Icon, preview }) => {
           const active = settings.theme === value
           return (
@@ -44,8 +44,8 @@ export function AppearanceTab() {
               aria-checked={active}
               onClick={() => update.mutate({ ...settings, theme: value })}
               className={cn(
-                'flex flex-col items-center gap-3 rounded-lg border p-4',
-                active ? 'border-info bg-info/10' : 'border-border bg-card hover:bg-muted/40',
+                'flex flex-col items-center gap-3 rounded-xl p-3 ring-1 transition-[background-color,transform] duration-150 ease-(--ease-settle) active:scale-[0.97] motion-reduce:active:scale-100',
+                active ? 'bg-info/10 ring-2 ring-info' : 'bg-card ring-border/50 hover:bg-muted/40',
               )}
             >
               <span

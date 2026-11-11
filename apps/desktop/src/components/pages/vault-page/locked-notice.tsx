@@ -25,6 +25,7 @@ function LockedPlaceholder({ onUnlock }: { onUnlock: () => void }) {
   return (
     <EmptyState
       icon={Lock}
+      plainIcon
       title="This vault is locked"
       description="Secret names are encrypted. Unlock the vault once on this device to see them."
     >

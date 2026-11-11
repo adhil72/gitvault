@@ -1,6 +1,7 @@
 import { Outlet, useParams } from '@tanstack/react-router'
 
 import { UnlockDialog } from '@/components/general/unlock-dialog'
+import { useCollapseForSettings, useSidebarShortcut } from '@/hooks/use-sidebar-behavior'
 
 import { AppHeader } from './app-header'
 import { AppSidebar } from './app-sidebar'
@@ -8,6 +9,8 @@ import { AppSidebar } from './app-sidebar'
 /** Header, sidebar and the current page for everything inside a vault (locked or not). */
 export function AppShell() {
   const { vaultId } = useParams({ from: '/_authed/vaults/$vaultId' })
+  useCollapseForSettings()
+  useSidebarShortcut()
   return (
     <div className="flex h-[calc(100vh-var(--titlebar-h))] flex-col">
       <AppHeader vaultId={vaultId} />

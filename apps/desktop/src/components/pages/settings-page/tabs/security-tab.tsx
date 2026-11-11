@@ -9,7 +9,7 @@ import { PasswordField } from '@/components/general/password-field'
 import { Button } from '@/components/ui/button'
 import { useChangePassword, useLockVault, useRegenerateRecovery } from '@/hooks/use-vaults'
 
-import { SettingsCard, SettingsRow } from '../settings-row'
+import { SettingsGroup, SettingsRow } from '../settings-row'
 import { TrustedDevicesCard } from './trusted-devices-card'
 
 export function SecurityTab({ vaultId }: { vaultId: string }) {
@@ -21,7 +21,7 @@ export function SecurityTab({ vaultId }: { vaultId: string }) {
       <ChangePasswordForm vaultId={vaultId} />
       <RecoveryKeyForm vaultId={vaultId} />
       <TrustedDevicesCard vaultId={vaultId} />
-      <SettingsCard>
+      <SettingsGroup title="Session">
         <SettingsRow
           title="Lock vault now"
           description="Wipe the key from memory and require the master password again."
@@ -37,7 +37,7 @@ export function SecurityTab({ vaultId }: { vaultId: string }) {
             Lock now
           </Button>
         </SettingsRow>
-      </SettingsCard>
+      </SettingsGroup>
     </>
   )
 }
@@ -60,34 +60,33 @@ function ChangePasswordForm({ vaultId }: { vaultId: string }) {
     )
   }
   return (
-    <form
-      onSubmit={submit}
-      className="flex max-w-md flex-col gap-3 rounded-lg border border-border bg-card p-5"
-    >
-      <h2 className="font-semibold">Change master password</h2>
-      <PasswordField
-        aria-label="Current master password"
-        placeholder="Current password"
-        value={current}
-        onChange={(e) => setCurrent(e.target.value)}
-        autoComplete="current-password"
-      />
-      <PasswordField
-        aria-label="New master password"
-        placeholder="New password (8+ characters)"
-        value={next}
-        onChange={(e) => setNext(e.target.value)}
-        autoComplete="new-password"
-      />
-      <ErrorNotice error={change.error} />
-      <Button
-        type="submit"
-        variant="secondary"
-        disabled={!current || next.length < 8 || change.isPending}
-      >
-        Change password
-      </Button>
-    </form>
+    <SettingsGroup title="Master password">
+      <form onSubmit={submit} className="flex flex-col gap-3 p-5">
+        <PasswordField
+          aria-label="Current master password"
+          placeholder="Current password"
+          value={current}
+          onChange={(e) => setCurrent(e.target.value)}
+          autoComplete="current-password"
+        />
+        <PasswordField
+          aria-label="New master password"
+          placeholder="New password (8+ characters)"
+          value={next}
+          onChange={(e) => setNext(e.target.value)}
+          autoComplete="new-password"
+        />
+        <ErrorNotice error={change.error} />
+        <Button
+          type="submit"
+          variant="secondary"
+          className="self-end"
+          disabled={!current || next.length < 8 || change.isPending}
+        >
+          Change password
+        </Button>
+      </form>
+    </SettingsGroup>
   )
 }
 
@@ -108,30 +107,30 @@ function RecoveryKeyForm({ vaultId }: { vaultId: string }) {
     )
   }
   return (
-    <form
-      onSubmit={submit}
-      className="flex max-w-md flex-col gap-3 rounded-lg border border-border bg-card p-5"
-    >
-      <h2 className="font-semibold">Recovery key</h2>
-      <p className="text-[13px] text-muted-foreground">
-        Creates a new key. The old one stops working.
-      </p>
-      <PasswordField
-        aria-label="Master password"
-        placeholder="Master password"
-        value={current}
-        onChange={(e) => setCurrent(e.target.value)}
-      />
-      <ErrorNotice error={regenerate.error} />
-      {key ? (
-        <div className="flex items-center justify-between gap-2 rounded-md border border-input bg-inset p-3">
-          <code className="font-mono text-sm break-all text-success">{key}</code>
-          <CopyButton value={key} label="Copy recovery key" />
-        </div>
-      ) : null}
-      <Button type="submit" variant="secondary" disabled={!current || regenerate.isPending}>
-        Generate new recovery key
-      </Button>
-    </form>
+    <SettingsGroup title="Recovery key" footer="Creates a new key. The old one stops working.">
+      <form onSubmit={submit} className="flex flex-col gap-3 p-5">
+        <PasswordField
+          aria-label="Master password"
+          placeholder="Master password"
+          value={current}
+          onChange={(e) => setCurrent(e.target.value)}
+        />
+        <ErrorNotice error={regenerate.error} />
+        {key ? (
+          <div className="flex items-center justify-between gap-2 rounded-lg bg-inset p-3 ring-1 ring-border/50">
+            <code className="font-mono text-sm break-all text-success">{key}</code>
+            <CopyButton value={key} label="Copy recovery key" />
+          </div>
+        ) : null}
+        <Button
+          type="submit"
+          variant="secondary"
+          className="self-end"
+          disabled={!current || regenerate.isPending}
+        >
+          Generate new recovery key
+        </Button>
+      </form>
+    </SettingsGroup>
   )
 }

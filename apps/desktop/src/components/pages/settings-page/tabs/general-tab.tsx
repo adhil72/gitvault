@@ -7,7 +7,7 @@ import { Switch } from '@/components/ui/switch'
 import { useSettings, useUpdateSettings } from '@/hooks/use-settings'
 import type { Settings } from '@/types'
 
-import { SettingsCard, SettingsRow } from '../settings-row'
+import { SettingsGroup, SettingsRow } from '../settings-row'
 import { UpdatesRow } from './updates-row'
 
 const MINUTES = [
@@ -38,7 +38,7 @@ export function GeneralTab() {
     <>
       <PageHeading title="General" description="Locking, clipboard and sync behavior." />
       <ErrorNotice error={update.error} />
-      <SettingsCard>
+      <SettingsGroup title="Protection">
         <SettingsRow title="Auto-lock vault" description="Lock after a period of inactivity.">
           <div className="w-44">
             <SelectField
@@ -75,6 +75,8 @@ export function GeneralTab() {
             />
           </div>
         </SettingsRow>
+      </SettingsGroup>
+      <SettingsGroup title="Sync">
         <SettingsRow
           title="Auto-sync"
           description="Push encrypted changes to GitHub after every edit."
@@ -85,8 +87,10 @@ export function GeneralTab() {
             onCheckedChange={(auto_sync) => save({ auto_sync })}
           />
         </SettingsRow>
+      </SettingsGroup>
+      <SettingsGroup title="About">
         <UpdatesRow />
-      </SettingsCard>
+      </SettingsGroup>
     </>
   )
 }

@@ -25,9 +25,9 @@ export function VaultCard({ vault }: { vault: VaultSummary }) {
     })
   }
 
-  return (
-    <li className="flex items-center gap-3.5 rounded-lg border border-border bg-card p-4">
-      <span className="flex size-9 items-center justify-center rounded-lg bg-muted">
+  const details = (
+    <>
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted">
         <Database className="size-[18px]" />
       </span>
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -37,15 +37,29 @@ export function VaultCard({ vault }: { vault: VaultSummary }) {
           {vault.id ? (vault.unlocked ? 'unlocked' : 'locked') : 'on GitHub, not connected'}
         </span>
       </span>
-      {vault.id ? (
-        <Button variant="secondary" size="sm" onClick={open}>
-          Open
-        </Button>
-      ) : (
-        <Button size="sm" onClick={connectRemote} disabled={connect.isPending}>
-          {connect.isPending ? 'Connecting…' : 'Connect'}
-        </Button>
-      )}
+    </>
+  )
+
+  if (vault.id) {
+    return (
+      <li>
+        <button
+          type="button"
+          onClick={open}
+          className="flex w-full items-center gap-3.5 rounded-lg border border-border bg-card p-4 text-left transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+        >
+          {details}
+        </button>
+      </li>
+    )
+  }
+
+  return (
+    <li className="flex items-center gap-3.5 rounded-lg border border-border bg-card p-4">
+      {details}
+      <Button size="sm" onClick={connectRemote} disabled={connect.isPending}>
+        {connect.isPending ? 'Connecting…' : 'Connect'}
+      </Button>
     </li>
   )
 }

@@ -10,7 +10,7 @@ import { useConflicts, useResolveConflict, useSyncNow, useSyncStatus } from '@/h
 import { useVault } from '@/hooks/use-vaults'
 import { timeAgo } from '@/lib/format'
 
-import { SettingsCard, SettingsRow } from '../settings-row'
+import { SettingsGroup, SettingsRow } from '../settings-row'
 
 export function GithubSyncTab({ vaultId }: { vaultId: string }) {
   return (
@@ -31,25 +31,27 @@ function AccountCard() {
   const { data: account } = useAccount()
   const logout = useLogout()
   return (
-    <section className="flex items-center gap-4 rounded-lg border border-border bg-card p-5">
-      <span className="flex size-12 items-center justify-center rounded-full border border-done bg-done/10 text-lg font-bold text-done">
-        {(account?.login ?? '?').slice(0, 1).toUpperCase()}
-      </span>
-      <div className="flex flex-1 flex-col gap-0.5">
-        <span className="font-semibold">{account?.login}</span>
-        <span className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
-          <GithubMark className="size-3.5" /> Signed in with GitHub
+    <SettingsGroup title="Account">
+      <div className="flex items-center gap-4 p-5">
+        <span className="flex size-11 items-center justify-center rounded-full bg-done/15 text-base font-semibold text-done ring-1 ring-done/40">
+          {(account?.login ?? '?').slice(0, 1).toUpperCase()}
         </span>
+        <div className="flex flex-1 flex-col gap-0.5">
+          <span className="text-[15px] font-medium">{account?.login}</span>
+          <span className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
+            <GithubMark className="size-3.5" /> Signed in with GitHub
+          </span>
+        </div>
+        <Button
+          variant="danger"
+          onClick={() =>
+            logout.mutate(undefined, { onSuccess: () => void navigate({ to: '/sign-in' }) })
+          }
+        >
+          Sign out
+        </Button>
       </div>
-      <Button
-        variant="danger"
-        onClick={() =>
-          logout.mutate(undefined, { onSuccess: () => void navigate({ to: '/sign-in' }) })
-        }
-      >
-        Sign out
-      </Button>
-    </section>
+    </SettingsGroup>
   )
 }
 
@@ -64,12 +66,12 @@ function RepositoryCard({ vaultId }: { vaultId: string }) {
       onError: (error) => toast.error(error.message),
     })
   return (
-    <SettingsCard>
+    <SettingsGroup title="Sync">
       <SettingsRow
         title="Repository"
         description={vault?.repo ?? 'This vault has no GitHub repository (local only).'}
       >
-        <span className="rounded-full border border-success/60 bg-success/10 px-2.5 py-0.5 text-xs text-success">
+        <span className="rounded-full bg-success/15 px-2.5 py-0.5 text-xs font-medium text-success">
           {vault?.repo ? 'Private' : 'Local'}
         </span>
       </SettingsRow>
@@ -85,7 +87,7 @@ function RepositoryCard({ vaultId }: { vaultId: string }) {
           {sync.isPending ? 'Syncing…' : 'Sync now'}
         </Button>
       </SettingsRow>
-    </SettingsCard>
+    </SettingsGroup>
   )
 }
 
@@ -94,31 +96,32 @@ function Conflicts({ vaultId }: { vaultId: string }) {
   const resolve = useResolveConflict(vaultId)
   if (!conflicts?.length) return null
   return (
-    <section className="flex flex-col gap-3 rounded-lg border border-destructive/50 bg-destructive/5 p-5">
-      <h2 className="font-semibold">Conflicts</h2>
-      <p className="text-[13px] text-muted-foreground">
-        These secrets were changed on two devices. Choose which version to keep.
-      </p>
-      <ErrorNotice error={resolve.error} />
-      {conflicts.map((c) => (
-        <div key={c.secret_id} className="flex items-center gap-3">
-          <span className="flex-1 truncate font-mono text-sm">{c.name ?? c.secret_id}</span>
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={() => resolve.mutate({ secretId: c.secret_id, keep: 'local' })}
-          >
-            Keep mine
-          </Button>
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={() => resolve.mutate({ secretId: c.secret_id, keep: 'remote' })}
-          >
-            Keep GitHub&apos;s
-          </Button>
-        </div>
-      ))}
-    </section>
+    <SettingsGroup
+      title="Conflicts"
+      footer="These secrets were changed on two devices. Choose which version to keep."
+    >
+      <div className="flex flex-col gap-3 p-5">
+        <ErrorNotice error={resolve.error} />
+        {conflicts.map((c) => (
+          <div key={c.secret_id} className="flex items-center gap-3">
+            <span className="flex-1 truncate font-mono text-sm">{c.name ?? c.secret_id}</span>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => resolve.mutate({ secretId: c.secret_id, keep: 'local' })}
+            >
+              Keep mine
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => resolve.mutate({ secretId: c.secret_id, keep: 'remote' })}
+            >
+              Keep GitHub&apos;s
+            </Button>
+          </div>
+        ))}
+      </div>
+    </SettingsGroup>
   )
 }

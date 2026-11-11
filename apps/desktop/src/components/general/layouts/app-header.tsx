@@ -1,5 +1,5 @@
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
-import { Plus, Search } from 'lucide-react'
+import { PanelLeft, Plus, Search } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
 import { AccountMenu } from '@/components/general/layouts/account-menu'
@@ -9,6 +9,7 @@ import { VaultSwitcher } from '@/components/general/vault-switcher'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useRequireUnlock } from '@/hooks/use-require-unlock'
+import { useSidebar } from '@/stores/sidebar'
 import type { VaultSearch } from '@/schemas/vault-search'
 
 const SEARCH_DEBOUNCE_MS = 200
@@ -52,21 +53,32 @@ export function AppHeader({ vaultId }: { vaultId: string }) {
   const { text, setText } = useSearchBox(vaultId)
   useSlashShortcut(input)
   const navigate = useNavigate()
+  const collapsed = useSidebar((s) => s.collapsed)
+  const toggleSidebar = useSidebar((s) => s.toggle)
   const requireUnlock = useRequireUnlock(vaultId)
   const goToAddSecret = () =>
     void navigate({ to: '/vaults/$vaultId/secrets/new/$step', params: { vaultId, step: 'type' } })
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-brand-line bg-inset px-4">
-      <div className="flex items-center gap-4">
+    <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-border/40 bg-inset px-4">
+      <div className="flex items-center gap-3">
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label={collapsed ? 'Show sidebar' : 'Hide sidebar'}
+          aria-expanded={!collapsed}
+          title="Toggle sidebar (Ctrl+B)"
+          onClick={toggleSidebar}
+        >
+          <PanelLeft />
+        </Button>
         <Link to="/vaults/$vaultId" params={{ vaultId }}>
           <Logo size="sm" />
         </Link>
-        <span className="h-16 w-px bg-border" />
         <VaultSwitcher vaultId={vaultId} />
       </div>
       <div className="flex items-center gap-3">
         <SyncIndicator vaultId={vaultId} />
-        <div className="relative w-80">
+        <div className="relative w-72">
           <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             ref={input}
@@ -74,13 +86,13 @@ export function AppHeader({ vaultId }: { vaultId: string }) {
             onChange={(e) => setText(e.target.value)}
             placeholder="Search secrets"
             aria-label="Search secrets"
-            className="h-10 pr-8 pl-9"
+            className="h-9 rounded-lg border-transparent bg-muted/60 pr-9 pl-9 shadow-none hover:bg-muted focus-visible:bg-background"
           />
-          <kbd className="absolute top-1/2 right-2.5 -translate-y-1/2 rounded border border-border px-1.5 font-mono text-xs text-muted-foreground">
+          <kbd className="absolute top-1/2 right-2.5 -translate-y-1/2 rounded-md bg-background/60 px-1.5 py-px font-mono text-[11px] text-muted-foreground">
             /
           </kbd>
         </div>
-        <Button onClick={() => requireUnlock(goToAddSecret)}>
+        <Button className="h-9 rounded-lg" onClick={() => requireUnlock(goToAddSecret)}>
           <Plus /> Add secret
         </Button>
         <AccountMenu vaultId={vaultId} />

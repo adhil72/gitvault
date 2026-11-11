@@ -65,14 +65,19 @@ function UnlockForm({ vaultId }: { vaultId: string }) {
   }
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-5">
-      <DialogHeader>
-        <DialogTitle className="flex items-center gap-2">
-          <Lock className="size-4" /> Unlock {vault?.name ?? 'vault'}
-        </DialogTitle>
-        <DialogDescription>
-          Enter the master password to view, copy or change secrets.
-        </DialogDescription>
+    <form onSubmit={submit} className="flex flex-col gap-6">
+      <DialogHeader className="items-center gap-3 text-center">
+        <span className="flex size-11 items-center justify-center rounded-full bg-muted">
+          <Lock className="size-5 text-muted-foreground" />
+        </span>
+        <div className="flex flex-col gap-1">
+          <DialogTitle className="text-lg font-semibold">
+            Unlock {vault?.name ?? 'vault'}
+          </DialogTitle>
+          <DialogDescription>
+            Enter your master password to view, copy or change secrets.
+          </DialogDescription>
+        </div>
       </DialogHeader>
       <FormField label={useRecovery ? 'Recovery key' : 'Master password'} htmlFor="unlock-secret">
         {useRecovery ? (
@@ -94,18 +99,33 @@ function UnlockForm({ vaultId }: { vaultId: string }) {
           />
         )}
       </FormField>
-      <div className="flex items-center gap-2.5">
+      <Label
+        htmlFor="trust-device"
+        className="flex cursor-pointer items-start gap-3 rounded-lg border border-border bg-inset p-3.5 font-normal"
+      >
         <Checkbox
           id="trust-device"
+          className="mt-0.5"
           checked={trustDevice}
           onCheckedChange={(checked) => setTrustDevice(checked === true)}
         />
-        <Label htmlFor="trust-device" className="text-sm font-normal">
-          Trust this device (unlock without the password next time)
-        </Label>
-      </div>
+        <span className="flex flex-col gap-0.5">
+          <span className="text-sm text-foreground">Trust this device</span>
+          <span className="text-xs text-muted-foreground">
+            Unlock without the password next time.
+          </span>
+        </span>
+      </Label>
       <ErrorNotice error={unlock.error} />
-      <DialogFooter className="items-center sm:justify-between">
+      <DialogFooter className="flex-col gap-3 sm:flex-col sm:justify-stretch">
+        <Button
+          type="submit"
+          size="lg"
+          className="w-full transition-transform duration-100 active:scale-[0.98] motion-reduce:transition-none motion-reduce:active:scale-100"
+          disabled={!secret || unlock.isPending}
+        >
+          {unlock.isPending ? 'Unlocking…' : 'Unlock vault'}
+        </Button>
         <button
           type="button"
           className="text-sm text-info hover:underline"
@@ -113,9 +133,6 @@ function UnlockForm({ vaultId }: { vaultId: string }) {
         >
           {useRecovery ? 'Use master password' : 'Use recovery key instead'}
         </button>
-        <Button type="submit" disabled={!secret || unlock.isPending}>
-          {unlock.isPending ? 'Unlocking…' : 'Unlock vault'}
-        </Button>
       </DialogFooter>
     </form>
   )
