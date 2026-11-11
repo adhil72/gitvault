@@ -114,9 +114,8 @@ jobs:
           args: --bundles ${{ matrix.bundles }} ${{ steps.winsign.outputs.args }}
 
   # The source repository is private, so releases are published to the public
-  # website repository, which also hosts the site. The release is created as a
-  # draft: publishing it (in the GitHub UI) is what makes it, and the update
-  # feed, public.
+  # website repository, which also hosts the site. It is published immediately,
+  # which also switches on the update feed (latest.json).
   publish:
     needs: [create-release, release]
     runs-on: ubuntu-latest
@@ -151,7 +150,7 @@ jobs:
           # Version-free copies let the website link to releases/latest/download/<name> forever.
           cp "$exe" GitVault-setup.exe
           cp ./*.deb GitVault.deb
-      - name: Create the draft release in the public repository
+      - name: Create the release in the public repository
         env:
           GH_TOKEN: ${{ secrets.WEBSITE_TOKEN }}
         run: |
@@ -160,6 +159,6 @@ jobs:
             exit 0
           fi
           cd dist
-          gh release create "$TAG" --repo "$PUBLIC_REPO" --draft --title "GitVault $TAG" \
+          gh release create "$TAG" --repo "$PUBLIC_REPO" --latest --title "GitVault $TAG" \
             --notes "Verify downloads with \`sha256sum -c SHA256SUMS --ignore-missing\`." \
             ./*.exe ./*.exe.sig ./*.deb latest.json SHA256SUMS
