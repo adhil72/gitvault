@@ -1,13 +1,18 @@
-'use strict'
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import { execFileSync, spawnSync } from 'node:child_process'
+import { createRequire } from 'node:module'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const test = require('node:test')
-const assert = require('node:assert/strict')
-const { execFileSync, spawnSync } = require('node:child_process')
-const fs = require('node:fs')
-const os = require('node:os')
-const path = require('node:path')
+const here = path.dirname(fileURLToPath(import.meta.url))
+const require = createRequire(import.meta.url)
 
-const BIN = path.resolve(__dirname, '../../../target/debug/gitvault')
+type Loader = typeof import('../src/index.ts')
+
+const BIN = path.resolve(here, '../../../target/debug/gitvault')
 const PASSWORD = 'correct horse battery'
 const home = fs.mkdtempSync(path.join(os.tmpdir(), 'gv-node-'))
 process.env.GITVAULT_HOME = home
@@ -15,7 +20,7 @@ process.env.GITVAULT_BIN = BIN
 delete process.env.GITVAULT_SESSION
 delete process.env.GITVAULT_VAULT
 
-function cli(args, input = '') {
+function cli(args: string[], input = ''): string {
   return execFileSync(BIN, args, { input, env: process.env, encoding: 'utf8' })
 }
 
@@ -32,16 +37,18 @@ test.before(() => {
   cli(['lock'])
 })
 
-function freshLoader() {
-  delete require.cache[require.resolve('../index.js')]
-  return require('../index.js')
+// The built CommonJS bundle, reloaded each time so every test starts from a clean module.
+function freshLoader(): Loader {
+  const file = path.join(here, '../dist/index.cjs')
+  delete require.cache[file]
+  return require(file) as Loader
 }
 
 test('a locked vault without a password throws E_LOCKED and never hangs', () => {
   const { config, GitVaultError } = freshLoader()
   assert.throws(
     () => config('development'),
-    (e) => e instanceof GitVaultError && e.code === 'E_LOCKED',
+    (e: unknown) => e instanceof GitVaultError && e.code === 'E_LOCKED',
   )
 })
 
@@ -97,7 +104,7 @@ test('a trusted device key unlocks without the password, and stops working once 
   process.env.GITVAULT_DEVICE_KEY = key
   assert.throws(
     () => config('development'),
-    (e) => e.code === 'E_PERMISSION_DENIED',
+    (e: { code?: string }) => e.code === 'E_PERMISSION_DENIED',
   )
 })
 
@@ -105,21 +112,38 @@ test('a missing CLI gives E_NOT_INSTALLED', () => {
   const { config } = freshLoader()
   assert.throws(
     () => config('development', { bin: '/no/such/gitvault' }),
-    (e) => e.code === 'E_NOT_INSTALLED',
+    (e: { code?: string }) => e.code === 'E_NOT_INSTALLED',
   )
 })
 
-function childEnv() {
-  const env = { ...process.env, NODE_ENV: 'production', GITVAULT_PASSWORD: PASSWORD }
+function childEnv(): NodeJS.ProcessEnv {
+  const env: NodeJS.ProcessEnv = {
+    ...process.env,
+    NODE_ENV: 'production',
+    GITVAULT_PASSWORD: PASSWORD,
+  }
   delete env.API_KEY
   return env
 }
 
-test('importing gitvault/config uses NODE_ENV', () => {
+test('importing gitvault/config uses NODE_ENV (CommonJS)', () => {
   const run = spawnSync(
     process.execPath,
-    ['-e', "require('../config.js'); console.log(process.env.API_KEY)"],
-    { cwd: __dirname, env: childEnv(), encoding: 'utf8' },
+    ['-e', "require('./dist/config.cjs'); console.log(process.env.API_KEY)"],
+    { cwd: path.join(here, '..'), env: childEnv(), encoding: 'utf8' },
+  )
+  assert.equal(run.stdout.trim(), 'prod-key')
+})
+
+test('importing gitvault/config uses NODE_ENV (ESM)', () => {
+  const run = spawnSync(
+    process.execPath,
+    [
+      '--input-type=module',
+      '-e',
+      "await import('./dist/config.js'); console.log(process.env.API_KEY)",
+    ],
+    { cwd: path.join(here, '..'), env: childEnv(), encoding: 'utf8' },
   )
   assert.equal(run.stdout.trim(), 'prod-key')
 })

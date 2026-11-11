@@ -16,7 +16,7 @@
     "gen:types": "cargo test -p gitvault-core export_bindings -q && node scripts/gen-types-index.mjs",
     "gen:docs": "cargo build -q -p gitvault-cli && node scripts/gen-cli-docs.mjs",
     "check:rust": "cargo fmt --all --check && cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace",
-    "test:node": "cargo build -q -p gitvault-cli && pnpm --filter gitvault test",
+    "test:node": "cargo build -q -p gitvault-cli && pnpm --filter @adhil72/gitvault test",
     "check:all": "pnpm check && pnpm check:rust && pnpm test:node"
   },
   "devDependencies": {
