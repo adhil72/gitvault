@@ -205,11 +205,12 @@ jobs:
 
   # The Node library goes to the public npm registry. It needs only the checkout, not the desktop builds.
   publish-npm:
-    needs: prepare
+    needs: [prepare, publish]
     if: needs.prepare.outputs.release == 'true'
     runs-on: ubuntu-latest
     env:
       TAG: ${{ needs.prepare.outputs.tag }}
+      PUBLIC_REPO: adhil72/gitvault-website
     steps:
       - uses: actions/checkout@v4
         with:
@@ -237,3 +238,22 @@ jobs:
           else
             npm publish
           fi
+      # Mirror the library next to the desktop builds in the public repository,
+      # as a downloadable tarball with its checksum. Needs the release that the
+      # publish job creates, so this job waits for it.
+      - name: Attach the library tarball to the public release
+        working-directory: packages/node
+        env:
+          GH_TOKEN: ${{ secrets.WEBSITE_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::warning::WEBSITE_TOKEN is not set; the library tarball was not sent to $PUBLIC_REPO"
+            exit 0
+          fi
+          version="${TAG#v}"
+          tgz=$(npm pack --silent)
+          cp "$tgz" "gitvault-node-$version.tgz"
+          sha256sum "gitvault-node-$version.tgz" > gitvault-node-SHA256SUMS
+          cat gitvault-node-SHA256SUMS
+          gh release upload "$TAG" --repo "$PUBLIC_REPO" --clobber \
+            "gitvault-node-$version.tgz" gitvault-node-SHA256SUMS
