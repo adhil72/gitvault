@@ -9,15 +9,15 @@ Load your GitVault secrets into `process.env` at startup. No `.env` files in the
 Published on the public npm registry. No token needed:
 
 ```bash
-npm install @adhil72/gitvault
+npm install @adhil28/gitvault
 ```
 
 ```js
-import '@adhil72/gitvault/config' // uses GITVAULT_ENV, then NODE_ENV
+import '@adhil28/gitvault/config' // uses GITVAULT_ENV, then NODE_ENV
 ```
 
 ```js
-import { config } from '@adhil72/gitvault'
+import { config } from '@adhil28/gitvault'
 const { environment, loaded } = config('production') // names only, never values
 ```
 
@@ -31,7 +31,7 @@ const { environment, loaded } = config('production') // names only, never values
 ## Development
 
 ```bash
-pnpm --filter @adhil72/gitvault build      # tsup -> dist (ESM, CJS, .d.ts)
-pnpm --filter @adhil72/gitvault typecheck
+pnpm --filter @adhil28/gitvault build      # tsup -> dist (ESM, CJS, .d.ts)
+pnpm --filter @adhil28/gitvault typecheck
 pnpm test:node                    # builds the CLI and runs the integration tests
 ```

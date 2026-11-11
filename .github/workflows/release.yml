@@ -226,14 +226,14 @@ jobs:
         run: |
           version=$(jq -r .version packages/node/package.json)
           test "v$version" = "$TAG" || { echo "::error::Tag $TAG does not match package version $version"; exit 1; }
-      - run: pnpm --filter @adhil72/gitvault build
+      - run: pnpm --filter @adhil28/gitvault build
       # Re-running a release must not fail because this version is already published.
       - name: Publish
         working-directory: packages/node
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          if npm view "@adhil72/gitvault@${TAG#v}" version >/dev/null 2>&1; then
+          if npm view "@adhil28/gitvault@${TAG#v}" version >/dev/null 2>&1; then
             echo "already published"
           else
             npm publish
