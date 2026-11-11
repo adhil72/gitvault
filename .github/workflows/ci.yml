@@ -1,8 +1,7 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
+  # Pushes to main are built and verified by the Release workflow; CI covers pull requests.
   pull_request:
 
 concurrency:
