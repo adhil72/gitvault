@@ -5,6 +5,7 @@
 
 pub mod audit;
 pub mod auth;
+pub mod collaborators;
 pub mod context;
 mod devices;
 mod keys;

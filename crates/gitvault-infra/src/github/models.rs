@@ -1,8 +1,8 @@
 //! JSON shapes returned by GitHub, and their conversion to core types.
 
 use gitvault_core::{
-    domain::account::GithubAccount,
-    ports::{DeviceCode, DevicePoll, RemoteRepo, RepoAccess},
+    domain::{account::GithubAccount, collaborator::CollaboratorRole},
+    ports::{Collaborator, DeviceCode, DevicePoll, RemoteRepo, RepoAccess},
 };
 use serde::Deserialize;
 
@@ -113,6 +113,63 @@ impl From<RepoResponse> for RemoteRepo {
             private: r.private,
             updated_at: r.updated_at,
         }
+    }
+}
+
+#[derive(Deserialize)]
+pub struct CollaboratorResponse {
+    pub login: String,
+    #[serde(default)]
+    pub avatar_url: String,
+    #[serde(default)]
+    pub permissions: Option<Permissions>,
+}
+
+#[derive(Deserialize)]
+pub struct Invitee {
+    pub login: String,
+    #[serde(default)]
+    pub avatar_url: String,
+}
+
+/// A pending repository invitation. `permissions` is GitHub's role name, e.g. `read`.
+#[derive(Deserialize)]
+pub struct InvitationResponse {
+    pub invitee: Option<Invitee>,
+    #[serde(default)]
+    pub permissions: String,
+}
+
+impl From<CollaboratorResponse> for Collaborator {
+    fn from(c: CollaboratorResponse) -> Self {
+        let push = c.permissions.is_some_and(|p| p.push);
+        Self {
+            login: c.login,
+            avatar_url: c.avatar_url,
+            role: if push {
+                CollaboratorRole::Write
+            } else {
+                CollaboratorRole::Read
+            },
+            pending: false,
+        }
+    }
+}
+
+impl InvitationResponse {
+    /// `None` for invitations GitHub sent to an address rather than a user.
+    pub fn into_collaborator(self) -> Option<Collaborator> {
+        let invitee = self.invitee?;
+        let role = match self.permissions.as_str() {
+            "read" | "triage" => CollaboratorRole::Read,
+            _ => CollaboratorRole::Write,
+        };
+        Some(Collaborator {
+            login: invitee.login,
+            avatar_url: invitee.avatar_url,
+            role,
+            pending: true,
+        })
     }
 }
 

@@ -149,6 +149,27 @@ Stop trusting a device (needs the vault unlocked)
 - `<id>` (required)
 - `--password-stdin`: Read the master password from stdin instead of prompting
 
+### `gitvault collaborator`
+
+Give GitHub users access to the vault's repository (they still need the master password)
+
+#### `gitvault collaborator list`
+
+List the collaborators and pending invitations of the vault's repository
+
+#### `gitvault collaborator invite`
+
+Invite a GitHub user to the vault's repository (read-only unless --write)
+
+- `<login>` (required): The GitHub username, e.g. octocat
+- `--write`: Let them push secret changes too
+
+#### `gitvault collaborator remove`
+
+Remove a collaborator, or cancel their pending invitation
+
+- `<login>` (required)
+
 ### `gitvault secret`
 
 Add, read, change and delete secrets

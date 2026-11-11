@@ -1,4 +1,7 @@
-use crate::{domain::account::GithubAccount, error::CoreError};
+use crate::{
+    domain::{account::GithubAccount, collaborator::CollaboratorRole},
+    error::CoreError,
+};
 
 /// Response of GitHub's device-flow start.
 #[derive(Debug, Clone)]
@@ -35,6 +38,15 @@ pub enum RepoAccess {
     None,
     Read,
     Write,
+}
+
+/// A user with access to a vault repository: active, or invited and not yet accepted.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Collaborator {
+    pub login: String,
+    pub avatar_url: String,
+    pub role: CollaboratorRole,
+    pub pending: bool,
 }
 
 /// GitHub: identity and repositories.
@@ -77,4 +89,39 @@ pub trait GitHost: Send + Sync {
         name: &str,
         description: &str,
     ) -> Result<RemoteRepo, CoreError>;
+
+    /// Active collaborators and pending invitations of `full_name`.
+    ///
+    /// # Errors
+    /// [`CoreError::PermissionDenied`] without admin rights, [`CoreError::Network`] otherwise.
+    fn list_collaborators(
+        &self,
+        token: &str,
+        full_name: &str,
+    ) -> Result<Vec<Collaborator>, CoreError>;
+
+    /// Invites `login` (or updates their role if they already have access).
+    ///
+    /// # Errors
+    /// [`CoreError::NotFound`] for an unknown username, [`CoreError::PermissionDenied`]
+    /// without admin rights, [`CoreError::Network`] otherwise.
+    fn invite_collaborator(
+        &self,
+        token: &str,
+        full_name: &str,
+        login: &str,
+        role: CollaboratorRole,
+    ) -> Result<(), CoreError>;
+
+    /// Removes `login` from the repository; also cancels a pending invitation.
+    ///
+    /// # Errors
+    /// [`CoreError::NotFound`] when they have no access, [`CoreError::PermissionDenied`]
+    /// without admin rights, [`CoreError::Network`] otherwise.
+    fn remove_collaborator(
+        &self,
+        token: &str,
+        full_name: &str,
+        login: &str,
+    ) -> Result<(), CoreError>;
 }

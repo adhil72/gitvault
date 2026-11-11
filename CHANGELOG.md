@@ -5,6 +5,16 @@ All notable changes to GitVault are listed here, newest first. The format follow
 [Semantic Versioning](https://semver.org/). The same history is published at
 https://adhil72.github.io/gitvault-website/changelog/.
 
+## [0.4.0] - 2026-11-11
+
+### Added
+
+- **Collaborators.** Invite GitHub users to a vault's repository, read-only or able to change
+  secrets, list them, and remove them or cancel a pending invitation. Available in the desktop app
+  under Settings → GitHub & Sync, and as `gitvault collaborator list | invite | remove`. Inviting
+  grants repository access only: they still need the master password to open the vault, which you
+  share separately.
+
 ## [0.3.0] - 2026-11-11
 
 A visual refresh of the desktop app, a collapsible sidebar, and a security hardening of how vault

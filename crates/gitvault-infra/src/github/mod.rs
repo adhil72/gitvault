@@ -1,5 +1,6 @@
 //! GitHub REST API and OAuth device flow.
 
+mod collaborators;
 mod http_host;
 mod models;
 

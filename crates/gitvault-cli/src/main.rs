@@ -64,6 +64,7 @@ fn dispatch(app: &App, command: &Command) -> anyhow::Result<()> {
         Command::Unlock(args) => vault::unlock(app, args),
         Command::Lock => vault::lock(app),
         Command::Device { cmd } => device::run(app, cmd),
+        Command::Collaborator { cmd } => collaborator::run(app, cmd),
         Command::Trust { cmd } => trust::run(app, cmd),
         Command::Secret { cmd } => secret::run(app, cmd),
         Command::Env { cmd } => match cmd {

@@ -3,6 +3,7 @@
 
 pub mod audit;
 pub mod auth;
+pub mod collaborator;
 pub mod device;
 pub mod generate;
 pub mod load;

@@ -2,6 +2,7 @@
 
 pub mod account;
 pub mod audit;
+pub mod collaborator;
 pub mod env_file;
 pub mod generator;
 pub mod ids;

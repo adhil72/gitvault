@@ -3,6 +3,7 @@
 
 mod app;
 mod auth;
+mod collaborator;
 mod secret;
 mod sync;
 mod tools;
@@ -62,6 +63,9 @@ pub fn handler() -> impl Fn(tauri::ipc::Invoke) -> bool + Send + Sync + 'static 
         vault::device_trust,
         vault::device_list,
         vault::device_revoke,
+        collaborator::collaborator_list,
+        collaborator::collaborator_invite,
+        collaborator::collaborator_remove,
         vault::vault_create,
         vault::vault_connect,
         vault::vault_unlock,

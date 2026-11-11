@@ -1,8 +1,8 @@
 use std::time::Duration;
 
 use gitvault_core::{
-    domain::account::GithubAccount,
-    ports::{DeviceCode, DevicePoll, GitHost, RemoteRepo, RepoAccess},
+    domain::{account::GithubAccount, collaborator::CollaboratorRole},
+    ports::{Collaborator, DeviceCode, DevicePoll, GitHost, RemoteRepo, RepoAccess},
     CoreError,
 };
 use reqwest::{blocking::Client, StatusCode};
@@ -13,7 +13,7 @@ use super::models::{
     to_poll, DeviceCodeResponse, RepoResponse, TokenResponse, UserResponse, VAULT_TOPIC,
 };
 
-const API: &str = "https://api.github.com";
+pub(super) const API: &str = "https://api.github.com";
 const DEVICE_CODE_URL: &str = "https://github.com/login/device/code";
 const ACCESS_TOKEN_URL: &str = "https://github.com/login/oauth/access_token";
 const REPOS_PER_PAGE: u32 = 100;
@@ -23,7 +23,7 @@ const SCOPES: &str = "repo read:user";
 
 /// [`GitHost`] backed by the GitHub REST API.
 pub struct GithubHttp {
-    client: Client,
+    pub(super) client: Client,
 }
 
 impl GithubHttp {
@@ -38,7 +38,7 @@ impl GithubHttp {
         Ok(Self { client })
     }
 
-    fn get<T: DeserializeOwned>(&self, url: &str, token: &str) -> Result<T, CoreError> {
+    pub(super) fn get<T: DeserializeOwned>(&self, url: &str, token: &str) -> Result<T, CoreError> {
         let response = self
             .client
             .get(url)
@@ -74,11 +74,11 @@ impl GithubHttp {
     }
 }
 
-fn network(error: reqwest::Error) -> CoreError {
+pub(super) fn network(error: reqwest::Error) -> CoreError {
     CoreError::Network(error.without_url().to_string())
 }
 
-fn check(status: StatusCode) -> Result<(), CoreError> {
+pub(super) fn check(status: StatusCode) -> Result<(), CoreError> {
     match status {
         s if s.is_success() => Ok(()),
         StatusCode::UNAUTHORIZED => Err(CoreError::NotAuthenticated),
@@ -179,6 +179,33 @@ impl GitHost for GithubHttp {
         let repo: RepoResponse = response.json().map_err(network)?;
         self.add_topic(token, &repo.full_name)?;
         Ok(repo.into())
+    }
+
+    fn list_collaborators(
+        &self,
+        token: &str,
+        full_name: &str,
+    ) -> Result<Vec<Collaborator>, CoreError> {
+        self.fetch_collaborators(token, full_name)
+    }
+
+    fn invite_collaborator(
+        &self,
+        token: &str,
+        full_name: &str,
+        login: &str,
+        role: CollaboratorRole,
+    ) -> Result<(), CoreError> {
+        self.put_collaborator(token, full_name, login, role)
+    }
+
+    fn remove_collaborator(
+        &self,
+        token: &str,
+        full_name: &str,
+        login: &str,
+    ) -> Result<(), CoreError> {
+        self.delete_collaborator(token, full_name, login)
     }
 }
 

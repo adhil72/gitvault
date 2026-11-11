@@ -62,6 +62,11 @@ pub enum Command {
         #[command(subcommand)]
         cmd: DeviceCmd,
     },
+    /// Give GitHub users access to the vault's repository (they still need the master password).
+    Collaborator {
+        #[command(subcommand)]
+        cmd: CollaboratorCmd,
+    },
     /// Add, read, change and delete secrets.
     Secret {
         #[command(subcommand)]
@@ -246,6 +251,22 @@ pub enum DeviceCmd {
         #[command(flatten)]
         password: PasswordSource,
     },
+}
+
+#[derive(Debug, Subcommand)]
+pub enum CollaboratorCmd {
+    /// List the collaborators and pending invitations of the vault's repository.
+    List,
+    /// Invite a GitHub user to the vault's repository (read-only unless --write).
+    Invite {
+        /// The GitHub username, e.g. octocat.
+        login: String,
+        /// Let them push secret changes too.
+        #[arg(long)]
+        write: bool,
+    },
+    /// Remove a collaborator, or cancel their pending invitation.
+    Remove { login: String },
 }
 
 #[derive(Debug, Args)]

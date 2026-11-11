@@ -11,6 +11,7 @@ import { useVault } from '@/hooks/use-vaults'
 import { timeAgo } from '@/lib/format'
 
 import { SettingsGroup, SettingsRow } from '../settings-row'
+import { CollaboratorsCard } from './collaborators-card'
 
 export function GithubSyncTab({ vaultId }: { vaultId: string }) {
   return (
@@ -21,6 +22,7 @@ export function GithubSyncTab({ vaultId }: { vaultId: string }) {
       />
       <AccountCard />
       <RepositoryCard vaultId={vaultId} />
+      <CollaboratorsCard vaultId={vaultId} />
       <Conflicts vaultId={vaultId} />
     </>
   )

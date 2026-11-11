@@ -21,6 +21,8 @@ pub enum AuditKind {
     Locked,
     DeviceTrusted,
     DeviceRevoked,
+    CollaboratorInvited,
+    CollaboratorRemoved,
 }
 
 /// One line of the local, append-only audit log. It never contains secret values.

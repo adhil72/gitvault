@@ -1,7 +1,9 @@
 import type {
+  CollaboratorDto,
   CreatedVault,
   CreateVaultInput,
   DeviceDto,
+  InviteCollaboratorInput,
   TrustedDeviceDto,
   UnlockInput,
   VaultList,
@@ -23,6 +25,12 @@ export const deviceTrust = (vaultId: string, name: string) =>
 export const deviceList = (vaultId: string) => call<DeviceDto[]>('device_list', { vaultId })
 export const deviceRevoke = (vaultId: string, deviceId: string) =>
   call<void>('device_revoke', { vaultId, deviceId })
+export const collaboratorList = (vaultId: string) =>
+  call<CollaboratorDto[]>('collaborator_list', { vaultId })
+export const collaboratorInvite = (input: InviteCollaboratorInput) =>
+  call<void>('collaborator_invite', { input })
+export const collaboratorRemove = (vaultId: string, login: string) =>
+  call<void>('collaborator_remove', { vaultId, login })
 export const vaultLock = (vaultId: string) => call<void>('vault_lock', { vaultId })
 export const vaultInfo = (vaultId: string) => call<VaultSummary>('vault_info', { vaultId })
 export const vaultUse = (vaultId: string) => call<VaultSummary>('vault_use', { vaultId })

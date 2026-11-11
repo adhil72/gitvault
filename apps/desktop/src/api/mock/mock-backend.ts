@@ -1,5 +1,6 @@
 import type {
   AddSecretInput,
+  CollaboratorDto,
   CreateVaultInput,
   GenerateInput,
   ImportEnvInput,
@@ -207,6 +208,11 @@ function importEnv(i: ImportEnvInput) {
   return { created, updated: 0, skipped: 0 }
 }
 
+/** Collaborators per vault id, kept outside `state` because the mock has no GitHub behind it. */
+const collaborators = new Map<string, CollaboratorDto[]>()
+
+const peopleOf = (vaultId: unknown): CollaboratorDto[] => collaborators.get(String(vaultId)) ?? []
+
 const handlers: Record<string, Handler> = {
   app_info: () => ({ name: 'GitVault', version: 'mock' }),
   auth_status: () => state.account,
@@ -250,6 +256,24 @@ const handlers: Record<string, Handler> = {
     device_key: null,
   }),
   device_revoke: () => undefined,
+  collaborator_list: (a) => peopleOf(a.vaultId),
+  collaborator_invite: (a) => {
+    const input = a.input as { vault_id: string; login: string; role: CollaboratorDto['role'] }
+    const login = input.login.replace(/^@/, '')
+    const rest = peopleOf(input.vault_id).filter((p) => p.login !== login)
+    collaborators.set(input.vault_id, [
+      ...rest,
+      { login, avatar_url: '', role: input.role, pending: true },
+    ])
+    return undefined
+  },
+  collaborator_remove: (a) => {
+    collaborators.set(
+      String(a.vaultId),
+      peopleOf(a.vaultId).filter((p) => p.login !== a.login),
+    )
+    return undefined
+  },
   vault_discover: () => ({ vaults: [], remote_error: null }),
   vault_list: () => ({ vaults: state.vaults.map(summaryOf), remote_error: null }),
   vault_create: (a) => createVault(a.input as CreateVaultInput),
@@ -381,6 +405,7 @@ export async function mockInvoke(command: string, args: Args): Promise<unknown> 
 
 /** Resets the mock to a clean, signed-out state (used by tests). */
 export function resetMock(): void {
+  collaborators.clear()
   Object.assign(state, {
     account: null,
     ghAccounts: [],

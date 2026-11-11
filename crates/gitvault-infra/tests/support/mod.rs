@@ -12,9 +12,11 @@ use gitvault_core::{
         context::{Context, CoreConfig},
         session::SessionManager,
     },
-    domain::account::GithubAccount,
+    domain::{account::GithubAccount, collaborator::CollaboratorRole},
     dto::{CreateVaultInput, CreatedVault},
-    ports::{Clock, DeviceCode, DevicePoll, GitHost, KeyValueStore, RemoteRepo, RepoAccess},
+    ports::{
+        Clock, Collaborator, DeviceCode, DevicePoll, GitHost, KeyValueStore, RemoteRepo, RepoAccess,
+    },
     services::Services,
     CoreError,
 };
@@ -31,6 +33,7 @@ pub const PASSWORD: &str = "correct horse battery";
 pub struct FakeHost {
     base: PathBuf,
     repos: Mutex<Vec<RemoteRepo>>,
+    collaborators: Mutex<Vec<Collaborator>>,
 }
 
 impl FakeHost {
@@ -38,6 +41,7 @@ impl FakeHost {
         Arc::new(Self {
             base: base.to_path_buf(),
             repos: Mutex::new(Vec::new()),
+            collaborators: Mutex::new(Vec::new()),
         })
     }
 }
@@ -84,6 +88,40 @@ impl GitHost for FakeHost {
         };
         self.repos.lock().unwrap().push(repo.clone());
         Ok(repo)
+    }
+
+    fn list_collaborators(&self, _: &str, _: &str) -> Result<Vec<Collaborator>, CoreError> {
+        Ok(self.collaborators.lock().unwrap().clone())
+    }
+
+    fn invite_collaborator(
+        &self,
+        _: &str,
+        _: &str,
+        login: &str,
+        role: CollaboratorRole,
+    ) -> Result<(), CoreError> {
+        let mut list = self.collaborators.lock().unwrap();
+        list.retain(|c| c.login != login);
+        list.push(Collaborator {
+            login: login.into(),
+            avatar_url: String::new(),
+            role,
+            pending: true,
+        });
+        Ok(())
+    }
+
+    fn remove_collaborator(&self, _: &str, _: &str, login: &str) -> Result<(), CoreError> {
+        let mut list = self.collaborators.lock().unwrap();
+        let before = list.len();
+        list.retain(|c| c.login != login);
+        if list.len() == before {
+            return Err(CoreError::NotFound {
+                entity: "collaborator",
+            });
+        }
+        Ok(())
     }
 }
 

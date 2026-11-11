@@ -3,4 +3,4 @@
 /**
  * What happened.
  */
-export type AuditKind = "created" | "viewed" | "copied" | "updated" | "rotated" | "deleted" | "restored" | "imported" | "exported" | "synced" | "unlocked" | "locked" | "device_trusted" | "device_revoked";
+export type AuditKind = "created" | "viewed" | "copied" | "updated" | "rotated" | "deleted" | "restored" | "imported" | "exported" | "synced" | "unlocked" | "locked" | "device_trusted" | "device_revoked" | "collaborator_invited" | "collaborator_removed";

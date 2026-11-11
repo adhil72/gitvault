@@ -1,7 +1,7 @@
 {
   "name": "gitvault",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Desktop and CLI secrets manager that stores encrypted vaults in your own private GitHub repository.",
   "scripts": {
     "dev": "pnpm --filter desktop tauri dev",

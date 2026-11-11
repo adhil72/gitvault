@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 use crate::{
-    domain::{audit::AuditKind, secret::SecretKind},
+    domain::{audit::AuditKind, collaborator::CollaboratorRole, secret::SecretKind},
     error::CoreError,
 };
 
@@ -129,6 +129,26 @@ dto! {
         pub vault_id: String,
         pub password: Option<String>,
         pub recovery_key: Option<String>,
+    }
+}
+
+// ---- collaborators -------------------------------------------------------
+
+dto! {
+    /// A GitHub user with access to the vault's repository, or invited to it.
+    pub struct CollaboratorDto {
+        pub login: String,
+        pub avatar_url: String,
+        pub role: CollaboratorRole,
+        /// Invited but has not accepted yet.
+        pub pending: bool,
+    }
+
+    pub struct InviteCollaboratorInput {
+        pub vault_id: String,
+        /// A GitHub username (a leading `@` is ignored).
+        pub login: String,
+        pub role: CollaboratorRole,
     }
 }
 
