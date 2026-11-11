@@ -9,6 +9,8 @@ import { WizardActions } from '@/components/general/wizard-actions'
 import { Input } from '@/components/ui/input'
 import { useCreateVaultDraft } from '@/stores/create-vault-draft'
 
+import { AccountField } from './account-field'
+
 const schema = z.object({
   name: z.string().trim().min(1, 'Give the vault a name').max(80, 'Use at most 80 characters'),
   description: z.string().max(200, 'Use at most 200 characters'),
@@ -41,6 +43,7 @@ export function NameStep() {
           {...register('name')}
         />
       </FormField>
+      <AccountField />
       <FormField
         label="Description (optional)"
         htmlFor="vault-description"

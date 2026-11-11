@@ -22,12 +22,17 @@ function downloadText(filename: string, text: string) {
 export function RecoveryStep() {
   const navigate = useNavigate()
   const result = useCreateVaultDraft((s) => s.result)
+  const reset = useCreateVaultDraft((s) => s.reset)
   const [saved, setSaved] = useState(false)
 
   useEffect(() => {
     if (!result) void navigate({ to: '/vaults/new/$step', params: { step: 'name' }, replace: true })
   }, [result, navigate])
   if (!result) return null
+
+  // Reset only after leaving: clearing the result first would bounce this step back to "name".
+  const openVault = () =>
+    void navigate({ to: '/vaults/$vaultId', params: { vaultId: result.vaultId } }).then(reset)
 
   const groups = result.recoveryKey.split('-')
   return (
@@ -71,7 +76,7 @@ export function RecoveryStep() {
         nextType="button"
         nextDisabled={!saved}
         nextLabel="Finish setup"
-        onNext={() => void navigate({ to: '/vaults/new/$step', params: { step: 'done' } })}
+        onNext={openVault}
         backLabel="Back"
         onBack={() => void navigate({ to: '/vaults/new/$step', params: { step: 'password' } })}
       />

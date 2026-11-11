@@ -1,6 +1,6 @@
 /** Steps of the multi-page flows. Each step is its own route (`/vaults/new/$step`). */
 
-export const CREATE_VAULT_STEPS = ['name', 'repository', 'password', 'recovery', 'done'] as const
+export const CREATE_VAULT_STEPS = ['name', 'repository', 'password', 'recovery'] as const
 export type CreateVaultStep = (typeof CREATE_VAULT_STEPS)[number]
 
 export const ADD_SECRET_STEPS = ['type', 'details', 'value', 'expiry', 'review', 'saved'] as const
@@ -11,7 +11,6 @@ export const CREATE_VAULT_LABELS: Record<CreateVaultStep, string> = {
   repository: 'Repository',
   password: 'Master password',
   recovery: 'Recovery key',
-  done: 'Done',
 }
 
 export const ADD_SECRET_LABELS: Record<AddSecretStep, string> = {
@@ -45,10 +44,6 @@ export const CREATE_VAULT_PANELS: Record<CreateVaultStep, PanelContent> = {
     headline: 'One last safety net',
     description:
       'Keep your recovery key offline. It restores your vault if you forget your master password.',
-  },
-  done: {
-    headline: 'You are all set',
-    description: 'Your vault is encrypted and synced to GitHub. Start adding secrets.',
   },
 }
 
