@@ -16,7 +16,7 @@ env:
   TAG: ${{ inputs.tag || github.ref_name }}
 
 jobs:
-  # Create the draft once so the parallel platform builds only upload assets to it.
+  # Create the release once (as a draft while assets upload) so the parallel platform builds only add to it.
   create-release:
     runs-on: ubuntu-latest
     outputs:
@@ -162,3 +162,8 @@ jobs:
           gh release create "$TAG" --repo "$PUBLIC_REPO" --latest --title "GitVault $TAG" \
             --notes "Verify downloads with \`sha256sum -c SHA256SUMS --ignore-missing\`." \
             ./*.exe ./*.exe.sig ./*.deb latest.json SHA256SUMS
+      - name: Publish the release in this repository too
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_ID: ${{ needs.create-release.outputs.release_id }}
+        run: gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" -F draft=false > /dev/null
