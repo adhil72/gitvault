@@ -1,3 +1,7 @@
 packages:
   - 'apps/*'
   - 'packages/*'
+
+# esbuild (used by tsup and vite) downloads its binary in a build script.
+allowBuilds:
+  esbuild: true

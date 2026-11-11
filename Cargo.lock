@@ -1666,7 +1666,7 @@ dependencies = [
 
 [[package]]
 name = "gitvault-cli"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "anyhow",
  "clap",
@@ -1682,7 +1682,7 @@ dependencies = [
 
 [[package]]
 name = "gitvault-core"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "gitvault-crypto",
  "schemars 0.8.22",
@@ -1695,7 +1695,7 @@ dependencies = [
 
 [[package]]
 name = "gitvault-crypto"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "aes-gcm",
  "argon2",
@@ -1711,7 +1711,7 @@ dependencies = [
 
 [[package]]
 name = "gitvault-desktop"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "gitvault-core",
  "gitvault-infra",
@@ -1727,7 +1727,7 @@ dependencies = [
 
 [[package]]
 name = "gitvault-infra"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "base64 0.22.1",
  "dirs 5.0.1",
