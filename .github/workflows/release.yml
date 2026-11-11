@@ -203,7 +203,7 @@ jobs:
           RELEASE_ID: ${{ needs.create-release.outputs.release_id }}
         run: gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" -F draft=false > /dev/null
 
-  # The Node library goes to GitHub Packages. It needs only the checkout, not the desktop builds.
+  # The Node library goes to the public npm registry. It needs only the checkout, not the desktop builds.
   publish-npm:
     needs: prepare
     if: needs.prepare.outputs.release == 'true'
@@ -219,7 +219,7 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-          registry-url: https://npm.pkg.github.com
+          registry-url: https://registry.npmjs.org
       - run: pnpm install --frozen-lockfile
       - name: Check the tag matches the package version
         run: |
@@ -230,7 +230,7 @@ jobs:
       - name: Publish
         working-directory: packages/node
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           if npm view "@adhil72/gitvault@${TAG#v}" version >/dev/null 2>&1; then
             echo "already published"

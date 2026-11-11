@@ -6,13 +6,7 @@ Load your GitVault secrets into `process.env` at startup. No `.env` files in the
 
 ## Install
 
-Published on GitHub Packages. Point the scope at it and sign in with a token that has `read:packages` (and access to the repo):
-
-```ini
-# .npmrc
-@adhil72:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
-```
+Published on the public npm registry. No token needed:
 
 ```bash
 npm install @adhil72/gitvault
