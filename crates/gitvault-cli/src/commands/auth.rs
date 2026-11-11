@@ -22,6 +22,7 @@ pub fn run(app: &App, cmd: &AuthCmd) -> Result<()> {
             })
         }
         AuthCmd::Status => status(app),
+        AuthCmd::Accounts => accounts(app),
     }
 }
 
@@ -33,8 +34,23 @@ fn status(app: &App) -> Result<()> {
     })
 }
 
+fn accounts(app: &App) -> Result<()> {
+    let accounts = app.services.auth.gh_accounts();
+    app.emit(&accounts, || {
+        if accounts.is_empty() {
+            return "No GitHub CLI accounts. Run `gh auth login`.".into();
+        }
+        let line = |a: &gitvault_core::dto::GhAccountDto| {
+            format!("{} {}", if a.current { "*" } else { " " }, a.login)
+        };
+        accounts.iter().map(line).collect::<Vec<_>>().join("\n")
+    })
+}
+
 fn login(app: &App, args: &LoginArgs) -> Result<()> {
-    let account = if args.with_token {
+    let account = if let Some(user) = &args.gh_user {
+        app.services.auth.login_with_gh_account(user)?
+    } else if args.with_token {
         app.services.auth.login_with_token(&input::stdin_token()?)?
     } else if args.from_gh {
         app.services.auth.login_with_gh_cli()?

@@ -1,5 +1,4 @@
 import type { QueryClient } from '@tanstack/react-query'
-import { redirect } from '@tanstack/react-router'
 
 import { vaultInfo, vaultUnlockTrusted } from '@/api/vaults'
 import { queryKeys } from '@/config/query-keys'
@@ -13,19 +12,18 @@ async function unlockedByTrust(vaultId: string): Promise<boolean> {
   }
 }
 
-/** Redirects to the unlock page when the vault is locked (always checks the backend). */
+/**
+ * Opens a vault without asking for a password. A vault is locked by default: pages show what is
+ * readable without the key and ask for the password in a dialog when it is needed. A device the
+ * user chose to trust unlocks silently here.
+ */
 export async function vaultGuard(queryClient: QueryClient, vaultId: string): Promise<void> {
   const vault = await queryClient.fetchQuery({
     queryKey: queryKeys.vault(vaultId),
     queryFn: () => vaultInfo(vaultId),
     staleTime: 0,
   })
-  // A trusted device unlocks silently; anything else falls through to the password page.
   if (!vault.unlocked && (await unlockedByTrust(vaultId))) {
     void queryClient.invalidateQueries({ queryKey: queryKeys.vault(vaultId) })
-    return
-  }
-  if (!vault.unlocked) {
-    throw redirect({ to: '/vaults/$vaultId/unlock', params: { vaultId }, search: {} })
   }
 }

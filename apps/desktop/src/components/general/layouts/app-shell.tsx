@@ -1,24 +1,13 @@
-import { Outlet, useNavigate, useParams } from '@tanstack/react-router'
-import { useEffect } from 'react'
+import { Outlet, useParams } from '@tanstack/react-router'
 
-import { useVault } from '@/hooks/use-vaults'
+import { UnlockDialog } from '@/components/general/unlock-dialog'
 
 import { AppHeader } from './app-header'
 import { AppSidebar } from './app-sidebar'
 
-/** Header, sidebar and the current page for everything inside an unlocked vault. */
+/** Header, sidebar and the current page for everything inside a vault (locked or not). */
 export function AppShell() {
   const { vaultId } = useParams({ from: '/_authed/vaults/$vaultId' })
-  const navigate = useNavigate()
-  const { data: vault } = useVault(vaultId)
-
-  // The backend locks the vault after the idle timeout; send the user to the unlock page.
-  useEffect(() => {
-    if (vault && !vault.unlocked) {
-      void navigate({ to: '/vaults/$vaultId/unlock', params: { vaultId }, search: {} })
-    }
-  }, [vault, vaultId, navigate])
-
   return (
     <div className="flex h-[calc(100vh-var(--titlebar-h))] flex-col">
       <AppHeader vaultId={vaultId} />
@@ -28,6 +17,7 @@ export function AppShell() {
           <Outlet />
         </main>
       </div>
+      <UnlockDialog vaultId={vaultId} />
     </div>
   )
 }

@@ -148,6 +148,8 @@ pub enum AuthCmd {
     Logout,
     /// Show the signed-in account.
     Status,
+    /// List the accounts of the GitHub CLI (`gh`).
+    Accounts,
 }
 
 #[derive(Debug, Args)]
@@ -158,6 +160,9 @@ pub struct LoginArgs {
     /// Reuse the token of the GitHub CLI (`gh auth token`).
     #[arg(long)]
     pub from_gh: bool,
+    /// Sign in as this account of the GitHub CLI (see `gitvault auth accounts`).
+    #[arg(long, value_name = "LOGIN", conflicts_with_all = ["with_token", "from_gh"])]
+    pub gh_user: Option<String>,
 }
 
 #[derive(Debug, Subcommand)]

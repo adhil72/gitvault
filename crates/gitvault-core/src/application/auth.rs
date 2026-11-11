@@ -5,7 +5,7 @@ use std::sync::Arc;
 use super::{context::Context, keys};
 use crate::{
     domain::account::GithubAccount,
-    dto::{AccountDto, DeviceCodeDto, LoginPollDto},
+    dto::{AccountDto, DeviceCodeDto, GhAccountDto, LoginPollDto},
     error::CoreError,
     ports::DevicePoll,
 };
@@ -76,6 +76,29 @@ impl AuthService {
     /// Fails when `gh` is missing or signed out, or GitHub rejects its token.
     pub fn login_with_gh_cli(&self) -> Result<AccountDto, CoreError> {
         self.login_with_token(&self.ctx.gh_cli.token()?)
+    }
+
+    /// Accounts of the local GitHub CLI; `current` marks the one GitVault uses.
+    #[must_use]
+    pub fn gh_accounts(&self) -> Vec<GhAccountDto> {
+        let signed_in = self.ctx.account().map(|a| a.login);
+        self.ctx
+            .gh_cli
+            .accounts()
+            .into_iter()
+            .map(|a| GhAccountDto {
+                current: signed_in.as_deref() == Some(a.login.as_str()),
+                login: a.login,
+            })
+            .collect()
+    }
+
+    /// Signs in with one specific account of the GitHub CLI (the CLI's own active account is untouched).
+    ///
+    /// # Errors
+    /// Fails when `gh` has no such account or GitHub rejects its token.
+    pub fn login_with_gh_account(&self, login: &str) -> Result<AccountDto, CoreError> {
+        self.login_with_token(&self.ctx.gh_cli.token_for(login)?)
     }
 
     /// Signs in with an existing token (personal access token or `gh auth token`).

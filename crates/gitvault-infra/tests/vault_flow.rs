@@ -126,28 +126,24 @@ fn sessions_persist_between_processes_only_when_enabled() {
     let host = FakeHost::new(dir.path());
     let first = device(dir.path(), host.clone(), true);
     let vault = create_vault(&first, "V", false).vault.id.unwrap();
-    assert!(first.secrets.facets(&vault).is_ok());
+    assert!(first.vaults.info(&vault).unwrap().unlocked);
 
     let second_cli = device(dir.path(), host.clone(), true);
-    assert!(second_cli.secrets.facets(&vault).is_ok());
+    assert!(second_cli.vaults.info(&vault).unwrap().unlocked);
     let token = second_cli.vaults.export_session(&vault).unwrap();
 
     let desktop = device(dir.path(), host.clone(), false);
-    assert_eq!(
-        desktop.secrets.facets(&vault).unwrap_err().code(),
-        ErrorCode::VaultLocked
-    );
+    assert!(!desktop.vaults.info(&vault).unwrap().unlocked);
     assert_eq!(desktop.vaults.import_session(&token).unwrap(), vault);
-    assert!(desktop.secrets.facets(&vault).is_ok());
+    assert!(desktop.vaults.info(&vault).unwrap().unlocked);
 
     second_cli.vaults.lock(&vault).unwrap();
-    assert_eq!(
-        device(dir.path(), host, true)
-            .secrets
-            .facets(&vault)
-            .unwrap_err()
-            .code(),
-        ErrorCode::VaultLocked
+    assert!(
+        !device(dir.path(), host, true)
+            .vaults
+            .info(&vault)
+            .unwrap()
+            .unlocked
     );
 }
 
@@ -268,4 +264,30 @@ fn two_devices_sync_and_resolve_conflicts() {
     a.sync.sync_now(&vault).unwrap();
     assert!(b.sync.sync_now(&vault).unwrap().pulled >= 1);
     assert_eq!(list_all(&b, &vault).len(), 2);
+}
+
+#[test]
+fn locked_vault_lists_names_but_never_values_or_notes() {
+    let dir = tempfile::tempdir().unwrap();
+    let s = device(dir.path(), FakeHost::new(dir.path()), false);
+    let vault = create_vault(&s, "V", false).vault.id.unwrap();
+    let added = s
+        .secrets
+        .add(&add_secret_input(&vault, "STRIPE_KEY", "sk_live_1"))
+        .unwrap();
+    // Browsing while unlocked is what refreshes the index.
+    assert_eq!(list_all(&s, &vault).len(), 1);
+
+    s.vaults.lock(&vault).unwrap();
+    let names: Vec<String> = list_all(&s, &vault).into_iter().map(|x| x.name).collect();
+    assert_eq!(names, ["STRIPE_KEY"]);
+    assert_eq!(s.secrets.get(&vault, &added.summary.id).unwrap().notes, "");
+    assert_eq!(
+        s.secrets
+            .reveal(&vault, &added.summary.id)
+            .unwrap_err()
+            .code(),
+        ErrorCode::VaultLocked
+    );
+    assert!(s.secrets.facets(&vault).is_ok());
 }

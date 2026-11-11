@@ -3,6 +3,7 @@ import type { AuditQuery, ListSecretsQuery } from '@/types'
 /** All TanStack Query keys in one place. Mutations invalidate by these prefixes. */
 export const queryKeys = {
   auth: ['auth'] as const,
+  ghAccounts: ['auth', 'gh-accounts'] as const,
   vaults: ['vaults'] as const,
   remoteVaults: ['vaults', 'remote'] as const,
   vault: (vaultId: string) => ['vault', vaultId] as const,

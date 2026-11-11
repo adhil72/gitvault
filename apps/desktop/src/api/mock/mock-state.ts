@@ -38,6 +38,8 @@ export interface MockVault {
 
 export interface MockState {
   account: AccountDto | null
+  /** Logins the mock `gh` CLI knows. Empty = signed out of gh. */
+  ghAccounts: string[]
   vaults: MockVault[]
   current: string | null
   settings: Settings
@@ -48,6 +50,7 @@ export interface MockState {
 
 export const state: MockState = {
   account: null,
+  ghAccounts: [],
   vaults: [],
   current: null,
   settings: {

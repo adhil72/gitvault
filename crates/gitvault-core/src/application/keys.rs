@@ -22,3 +22,8 @@ pub fn trust_policy(vault: &str) -> String {
 pub fn last_sync(vault: &str) -> String {
     format!("last_sync:{vault}")
 }
+
+/// This device's unencrypted index of a vault's secret names (no values, no notes).
+pub fn catalog(vault: &str) -> String {
+    format!("catalog:{vault}")
+}

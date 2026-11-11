@@ -24,6 +24,7 @@ Sign in. Without flags, uses the GitHub device flow
 
 - `--with-token`: Read a personal access token from stdin
 - `--from-gh`: Reuse the token of the GitHub CLI (`gh auth token`)
+- `--gh-user`: Sign in as this account of the GitHub CLI (see `gitvault auth accounts`)
 
 #### `gitvault auth logout`
 
@@ -32,6 +33,10 @@ Forget the GitHub token
 #### `gitvault auth status`
 
 Show the signed-in account
+
+#### `gitvault auth accounts`
+
+List the accounts of the GitHub CLI (`gh`)
 
 ### `gitvault vault`
 

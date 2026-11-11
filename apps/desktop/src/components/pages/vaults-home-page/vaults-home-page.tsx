@@ -1,6 +1,5 @@
-import { useNavigate, useSearch } from '@tanstack/react-router'
-import { Database, Plus } from 'lucide-react'
-import { useEffect } from 'react'
+import { useNavigate } from '@tanstack/react-router'
+import { Plus } from 'lucide-react'
 
 import { ErrorNotice } from '@/components/general/error-notice'
 import { PageHeading } from '@/components/general/page-heading'
@@ -9,33 +8,17 @@ import { useRemoteVaults, useVaults } from '@/hooks/use-vaults'
 
 import { VaultCard } from './vault-card'
 
-/** Lists local and GitHub vaults. Jumps straight into the current vault unless `?all=1`. */
+/** The first screen after opening the app: pick a vault (local or on GitHub) or create one. */
 export function VaultsHomePage() {
   const navigate = useNavigate()
-  const { all } = useSearch({ from: '/_authed/vaults/' })
   const { data, isLoading, error } = useVaults()
-  const remote = useRemoteVaults(Boolean(all ?? (data && data.vaults.length === 0)))
-
-  useEffect(() => {
-    if (!data || all) return
-    const current = data.vaults.find((v) => v.current && v.id)
-    if (current?.id) {
-      void navigate({
-        to: current.unlocked ? '/vaults/$vaultId' : '/vaults/$vaultId/unlock',
-        params: { vaultId: current.id },
-        search: {},
-        replace: true,
-      })
-    } else if (data.vaults.length === 0) {
-      void navigate({ to: '/vaults/new/$step', params: { step: 'name' }, replace: true })
-    }
-  }, [data, all, navigate])
+  const remote = useRemoteVaults(true)
 
   return (
     <main className="mx-auto flex min-h-[calc(100vh-var(--titlebar-h))] w-full max-w-xl flex-col justify-center gap-6 p-8">
       <PageHeading
         title="Your vaults"
-        description="Open a vault, connect one from GitHub, or create a new one."
+        description="Select a vault to open. Secrets stay locked until you enter the master password."
       />
       {isLoading ? <Skeleton className="h-40 w-full" /> : null}
       <ErrorNotice
@@ -66,7 +49,6 @@ export function VaultsHomePage() {
           </button>
         </li>
       </ul>
-      <Database className="hidden" />
     </main>
   )
 }

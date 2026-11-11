@@ -1,5 +1,6 @@
 //! Secrets: create, read, update, delete, search, history and transfer.
 
+mod catalog;
 mod crud;
 mod history;
 mod mapping;

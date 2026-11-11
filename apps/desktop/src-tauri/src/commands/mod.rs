@@ -53,6 +53,8 @@ pub fn handler() -> impl Fn(tauri::ipc::Invoke) -> bool + Send + Sync + 'static 
         auth::auth_login_poll,
         auth::auth_login_token,
         auth::auth_login_gh,
+        auth::auth_gh_accounts,
+        auth::auth_login_gh_account,
         auth::auth_logout,
         vault::vault_list,
         vault::vault_discover,

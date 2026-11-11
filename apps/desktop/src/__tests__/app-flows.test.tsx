@@ -19,18 +19,74 @@ describe('signed-out flows', () => {
   })
 })
 
-describe('signed-in vault flows', () => {
-  it('opens the current vault and lists its secrets', async () => {
-    seedDemo()
+const PASSWORD = 'demo-password-1'
+
+/** Seeds the demo account, opens its vault and (optionally) unlocks it first. */
+function seedVault(unlocked: boolean) {
+  seedDemo()
+  const vault = state.vaults[0]
+  if (vault) vault.unlocked = unlocked
+  return vault?.id ?? ''
+}
+
+describe('opening the app', () => {
+  it('asks which vault to open instead of jumping into one', async () => {
+    seedVault(false)
     await renderApp('/')
-    expect(await screen.findByText('STRIPE_SECRET_KEY')).toBeInTheDocument()
-    expect(screen.getByText('DATABASE_URL')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Your vaults' })).toBeInTheDocument()
+    expect(await screen.findByText('Personal vault')).toBeInTheDocument()
   })
 
-  it('shows details, reveals and hides a value, and keeps it masked by default', async () => {
-    seedDemo()
-    const user = userEvent.setup()
+  it('signs in silently with the gh CLI account when one exists', async () => {
+    seedVault(false)
+    state.account = null
     await renderApp('/')
+    expect(await screen.findByRole('heading', { name: 'Your vaults' })).toBeInTheDocument()
+  })
+
+  it('switches between gh accounts from the header', async () => {
+    const user = userEvent.setup()
+    await renderApp(`/vaults/${seedVault(false)}`)
+    await user.click(await screen.findByRole('button', { name: 'Account menu' }))
+    await user.click(await screen.findByRole('menuitem', { name: 'hubot' }))
+    expect(await screen.findByRole('heading', { name: 'Your vaults' })).toBeInTheDocument()
+    expect(state.account?.login).toBe('hubot')
+  })
+})
+
+describe('locked vault', () => {
+  it('opens without a password and lists names, with values locked', async () => {
+    await renderApp(`/vaults/${seedVault(false)}`)
+    expect(await screen.findByText('STRIPE_SECRET_KEY')).toBeInTheDocument()
+    expect(screen.getByText(/this vault is locked/i)).toBeInTheDocument()
+  })
+
+  it('asks for the password in a dialog before revealing, then reveals', async () => {
+    const user = userEvent.setup()
+    await renderApp(`/vaults/${seedVault(false)}`)
+    await user.click(await screen.findByRole('button', { name: /^STRIPE_SECRET_KEY/ }))
+    const panel = await screen.findByRole('complementary', { name: 'Secret details' })
+    await user.click(await within(panel).findByRole('button', { name: 'Reveal value' }))
+
+    const dialog = await screen.findByRole('dialog')
+    await user.type(within(dialog).getByLabelText('Master password'), 'not the password')
+    await user.click(within(dialog).getByRole('button', { name: 'Unlock vault' }))
+    expect(await within(dialog).findByText(/wrong master password/i)).toBeInTheDocument()
+
+    await user.clear(within(dialog).getByLabelText('Master password'))
+    await user.type(within(dialog).getByLabelText('Master password'), PASSWORD)
+    await user.click(within(dialog).getByRole('button', { name: 'Unlock vault' }))
+    await waitFor(() =>
+      expect(within(panel).getByTestId('secret-value')).toHaveTextContent('sk_live_'),
+    )
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+})
+
+describe('unlocked vault', () => {
+  it('shows details, reveals and hides a value, and keeps it masked by default', async () => {
+    const user = userEvent.setup()
+    await renderApp(`/vaults/${seedVault(true)}`)
     await user.click(await screen.findByRole('button', { name: /^STRIPE_SECRET_KEY/ }))
     const panel = await screen.findByRole('complementary', { name: 'Secret details' })
     expect(await within(panel).findByTestId('secret-value')).toHaveTextContent('••••')
@@ -40,29 +96,5 @@ describe('signed-in vault flows', () => {
     )
     await user.click(within(panel).getByRole('button', { name: 'Hide value' }))
     expect(within(panel).getByTestId('secret-value')).toHaveTextContent('••••')
-  })
-
-  it('sends the user to the unlock page when the vault is locked', async () => {
-    seedDemo()
-    const vault = state.vaults[0]
-    if (vault) vault.unlocked = false
-    await renderApp(`/vaults/${vault?.id}`)
-    expect(await screen.findByRole('heading', { name: 'Unlock vault' })).toBeInTheDocument()
-  })
-
-  it('unlocks with the master password and rejects a wrong one', async () => {
-    seedDemo()
-    const vault = state.vaults[0]
-    if (vault) vault.unlocked = false
-    const user = userEvent.setup()
-    await renderApp(`/vaults/${vault?.id}/unlock`)
-    const field = await screen.findByLabelText('Master password')
-    await user.type(field, 'not the password')
-    await user.click(screen.getByRole('button', { name: 'Unlock vault' }))
-    expect(await screen.findByText(/wrong master password/i)).toBeInTheDocument()
-    await user.clear(field)
-    await user.type(field, 'demo-password-1')
-    await user.click(screen.getByRole('button', { name: 'Unlock vault' }))
-    expect(await screen.findByText('STRIPE_SECRET_KEY')).toBeInTheDocument()
   })
 })

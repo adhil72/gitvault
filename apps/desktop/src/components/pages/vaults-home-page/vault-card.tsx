@@ -6,29 +6,21 @@ import { Button } from '@/components/ui/button'
 import { useConnectVault } from '@/hooks/use-vaults'
 import type { VaultSummary } from '@/types'
 
-/** One vault in the list: open it, unlock it, or connect it from GitHub. */
+/** One vault in the list: open it (it opens locked) or connect it from GitHub. */
 export function VaultCard({ vault }: { vault: VaultSummary }) {
   const navigate = useNavigate()
   const connect = useConnectVault()
 
   const open = () => {
     if (!vault.id) return
-    void navigate(
-      vault.unlocked
-        ? { to: '/vaults/$vaultId', params: { vaultId: vault.id } }
-        : { to: '/vaults/$vaultId/unlock', params: { vaultId: vault.id }, search: {} },
-    )
+    void navigate({ to: '/vaults/$vaultId', params: { vaultId: vault.id } })
   }
 
   const connectRemote = () => {
     if (!vault.repo) return
     connect.mutate(vault.repo, {
       onSuccess: (connected) =>
-        void navigate({
-          to: '/vaults/$vaultId/unlock',
-          params: { vaultId: connected.id ?? '' },
-          search: {},
-        }),
+        void navigate({ to: '/vaults/$vaultId', params: { vaultId: connected.id ?? '' } }),
       onError: (error) => toast.error(error.message),
     })
   }
@@ -47,7 +39,7 @@ export function VaultCard({ vault }: { vault: VaultSummary }) {
       </span>
       {vault.id ? (
         <Button variant="secondary" size="sm" onClick={open}>
-          {vault.unlocked ? 'Open' : 'Unlock'}
+          Open
         </Button>
       ) : (
         <Button size="sm" onClick={connectRemote} disabled={connect.isPending}>

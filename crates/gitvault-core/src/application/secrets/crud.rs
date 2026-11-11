@@ -63,15 +63,22 @@ impl SecretService {
         Ok(mapping::detail(&id, &payload, now))
     }
 
-    /// Metadata of one secret (no value).
+    /// Metadata of one secret (no value). Works while locked, minus the notes.
     ///
     /// # Errors
-    /// Locked vault or unknown secret.
+    /// Unknown secret, or a locked vault this device has never unlocked.
     pub fn get(&self, vault_id: &str, secret_id: &str) -> Result<SecretDetail, CoreError> {
-        let (vault, key) = self.open(vault_id)?;
         let id = SecretId::parse(secret_id)?;
-        let payload = self.load(&vault, &key, &id)?;
-        Ok(mapping::detail(&id, &payload, self.ctx.now()))
+        if let Ok((vault, key)) = self.open(vault_id) {
+            let payload = self.load(&vault, &key, &id)?;
+            return Ok(mapping::detail(&id, &payload, self.ctx.now()));
+        }
+        let (_, all) = self.browse(vault_id)?;
+        let (_, payload) = all
+            .iter()
+            .find(|(found, _)| *found == id)
+            .ok_or(CoreError::NotFound { entity: "secret" })?;
+        Ok(mapping::detail(&id, payload, self.ctx.now()))
     }
 
     /// The plaintext value. Recorded in the audit log.

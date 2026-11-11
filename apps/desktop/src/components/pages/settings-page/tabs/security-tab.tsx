@@ -30,8 +30,7 @@ export function SecurityTab({ vaultId }: { vaultId: string }) {
             variant="danger"
             onClick={() =>
               lock.mutate(vaultId, {
-                onSuccess: () =>
-                  void navigate({ to: '/vaults/$vaultId/unlock', params: { vaultId }, search: {} }),
+                onSuccess: () => void navigate({ to: '/vaults/$vaultId', params: { vaultId } }),
               })
             }
           >

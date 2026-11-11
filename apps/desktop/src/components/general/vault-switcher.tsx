@@ -34,11 +34,7 @@ export function VaultSwitcher({ vaultId }: { vaultId: string }) {
     if (!repo) return
     connect.mutate(repo, {
       onSuccess: (vault) =>
-        void navigate({
-          to: '/vaults/$vaultId/unlock',
-          params: { vaultId: vault.id ?? '' },
-          search: {},
-        }),
+        void navigate({ to: '/vaults/$vaultId', params: { vaultId: vault.id ?? '' } }),
       onError: (error) => toast.error(error.message),
     })
   }
@@ -80,10 +76,7 @@ export function VaultSwitcher({ vaultId }: { vaultId: string }) {
         >
           <Plus className="size-4 text-success" /> Create new vault
         </DropdownMenuItem>
-        <DropdownMenuItem
-          className="gap-3 py-2"
-          onSelect={() => void navigate({ to: '/vaults', search: { all: true } })}
-        >
+        <DropdownMenuItem className="gap-3 py-2" onSelect={() => void navigate({ to: '/vaults' })}>
           <GithubMark className="size-4" /> All vaults…
         </DropdownMenuItem>
       </DropdownMenuContent>

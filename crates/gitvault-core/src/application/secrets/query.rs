@@ -67,12 +67,11 @@ impl SecretService {
     /// Secrets of a vault matching the query, sorted (default: recently updated).
     ///
     /// # Errors
-    /// Locked vault or a storage error.
+    /// A vault this device never unlocked while locked, or a storage error.
     pub fn list(&self, query: &ListSecretsQuery) -> Result<Vec<SecretSummary>, CoreError> {
-        let (vault, key) = self.open(&query.vault_id)?;
+        let (_, all) = self.browse(&query.vault_id)?;
         let now = self.ctx.now();
-        let mut items: Vec<SecretSummary> = self
-            .load_all(&vault, &key)?
+        let mut items: Vec<SecretSummary> = all
             .iter()
             .filter(|(_, payload)| matches(payload, query, now))
             .map(|(id, payload)| mapping::summary(id, payload, now))
@@ -89,9 +88,8 @@ impl SecretService {
     /// # Errors
     /// Locked vault or a storage error.
     pub fn facets(&self, vault_id: &str) -> Result<Facets, CoreError> {
-        let (vault, key) = self.open(vault_id)?;
+        let (_, all) = self.browse(vault_id)?;
         let now = self.ctx.now();
-        let all = self.load_all(&vault, &key)?;
         let (mut environments, mut tags) = (BTreeMap::new(), BTreeMap::new());
         let (mut favorites, mut expiring_soon) = (0, 0);
         for (_, payload) in &all {

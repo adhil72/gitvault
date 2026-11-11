@@ -18,7 +18,6 @@ import { Route as AuthedVaultsIndexRouteImport } from './routes/_authed/vaults.i
 import { Route as AuthedVaultsVaultIdRouteImport } from './routes/_authed/vaults.$vaultId'
 import { Route as AuthedVaultsVaultIdIndexRouteImport } from './routes/_authed/vaults.$vaultId.index'
 import { Route as AuthedVaultsVaultIdAuditRouteImport } from './routes/_authed/vaults.$vaultId.audit'
-import { Route as AuthedWizardVaultsVaultIdUnlockRouteImport } from './routes/_authed/_wizard/vaults.$vaultId_.unlock'
 import { Route as AuthedWizardVaultsNewStepRouteImport } from './routes/_authed/_wizard/vaults.new.$step'
 import { Route as AuthedVaultsVaultIdHistorySecretIdRouteImport } from './routes/_authed/vaults.$vaultId.history.$secretId'
 import { Route as AuthedVaultsVaultIdSettingsTabRouteImport } from './routes/_authed/vaults.$vaultId.settings.$tab'
@@ -69,12 +68,6 @@ const AuthedVaultsVaultIdAuditRoute =
     path: '/audit',
     getParentRoute: () => AuthedVaultsVaultIdRoute,
   } as any)
-const AuthedWizardVaultsVaultIdUnlockRoute =
-  AuthedWizardVaultsVaultIdUnlockRouteImport.update({
-    id: '/vaults/$vaultId_/unlock',
-    path: '/vaults/$vaultId/unlock',
-    getParentRoute: () => AuthedWizardRoute,
-  } as any)
 const AuthedWizardVaultsNewStepRoute =
   AuthedWizardVaultsNewStepRouteImport.update({
     id: '/vaults/new/$step',
@@ -113,7 +106,6 @@ export interface FileRoutesByFullPath {
   '/vaults/': typeof AuthedVaultsIndexRoute
   '/vaults/$vaultId/audit': typeof AuthedVaultsVaultIdAuditRoute
   '/vaults/$vaultId/': typeof AuthedVaultsVaultIdIndexRoute
-  '/vaults/$vaultId/unlock': typeof AuthedWizardVaultsVaultIdUnlockRoute
   '/vaults/new/$step': typeof AuthedWizardVaultsNewStepRoute
   '/vaults/$vaultId/history/$secretId': typeof AuthedVaultsVaultIdHistorySecretIdRoute
   '/vaults/$vaultId/settings/$tab': typeof AuthedVaultsVaultIdSettingsTabRoute
@@ -126,7 +118,6 @@ export interface FileRoutesByTo {
   '/vaults': typeof AuthedVaultsIndexRoute
   '/vaults/$vaultId/audit': typeof AuthedVaultsVaultIdAuditRoute
   '/vaults/$vaultId': typeof AuthedVaultsVaultIdIndexRoute
-  '/vaults/$vaultId/unlock': typeof AuthedWizardVaultsVaultIdUnlockRoute
   '/vaults/new/$step': typeof AuthedWizardVaultsNewStepRoute
   '/vaults/$vaultId/history/$secretId': typeof AuthedVaultsVaultIdHistorySecretIdRoute
   '/vaults/$vaultId/settings/$tab': typeof AuthedVaultsVaultIdSettingsTabRoute
@@ -144,7 +135,6 @@ export interface FileRoutesById {
   '/_authed/vaults/': typeof AuthedVaultsIndexRoute
   '/_authed/vaults/$vaultId/audit': typeof AuthedVaultsVaultIdAuditRoute
   '/_authed/vaults/$vaultId/': typeof AuthedVaultsVaultIdIndexRoute
-  '/_authed/_wizard/vaults/$vaultId_/unlock': typeof AuthedWizardVaultsVaultIdUnlockRoute
   '/_authed/_wizard/vaults/new/$step': typeof AuthedWizardVaultsNewStepRoute
   '/_authed/vaults/$vaultId/history/$secretId': typeof AuthedVaultsVaultIdHistorySecretIdRoute
   '/_authed/vaults/$vaultId/settings/$tab': typeof AuthedVaultsVaultIdSettingsTabRoute
@@ -160,7 +150,6 @@ export interface FileRouteTypes {
     | '/vaults/'
     | '/vaults/$vaultId/audit'
     | '/vaults/$vaultId/'
-    | '/vaults/$vaultId/unlock'
     | '/vaults/new/$step'
     | '/vaults/$vaultId/history/$secretId'
     | '/vaults/$vaultId/settings/$tab'
@@ -173,7 +162,6 @@ export interface FileRouteTypes {
     | '/vaults'
     | '/vaults/$vaultId/audit'
     | '/vaults/$vaultId'
-    | '/vaults/$vaultId/unlock'
     | '/vaults/new/$step'
     | '/vaults/$vaultId/history/$secretId'
     | '/vaults/$vaultId/settings/$tab'
@@ -190,7 +178,6 @@ export interface FileRouteTypes {
     | '/_authed/vaults/'
     | '/_authed/vaults/$vaultId/audit'
     | '/_authed/vaults/$vaultId/'
-    | '/_authed/_wizard/vaults/$vaultId_/unlock'
     | '/_authed/_wizard/vaults/new/$step'
     | '/_authed/vaults/$vaultId/history/$secretId'
     | '/_authed/vaults/$vaultId/settings/$tab'
@@ -269,13 +256,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedVaultsVaultIdAuditRouteImport
       parentRoute: typeof AuthedVaultsVaultIdRoute
     }
-    '/_authed/_wizard/vaults/$vaultId_/unlock': {
-      id: '/_authed/_wizard/vaults/$vaultId_/unlock'
-      path: '/vaults/$vaultId/unlock'
-      fullPath: '/vaults/$vaultId/unlock'
-      preLoaderRoute: typeof AuthedWizardVaultsVaultIdUnlockRouteImport
-      parentRoute: typeof AuthedWizardRoute
-    }
     '/_authed/_wizard/vaults/new/$step': {
       id: '/_authed/_wizard/vaults/new/$step'
       path: '/vaults/new/$step'
@@ -315,13 +295,11 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthedWizardRouteChildren {
-  AuthedWizardVaultsVaultIdUnlockRoute: typeof AuthedWizardVaultsVaultIdUnlockRoute
   AuthedWizardVaultsNewStepRoute: typeof AuthedWizardVaultsNewStepRoute
   AuthedWizardVaultsVaultIdSecretsNewStepRoute: typeof AuthedWizardVaultsVaultIdSecretsNewStepRoute
 }
 
 const AuthedWizardRouteChildren: AuthedWizardRouteChildren = {
-  AuthedWizardVaultsVaultIdUnlockRoute: AuthedWizardVaultsVaultIdUnlockRoute,
   AuthedWizardVaultsNewStepRoute: AuthedWizardVaultsNewStepRoute,
   AuthedWizardVaultsVaultIdSecretsNewStepRoute:
     AuthedWizardVaultsVaultIdSecretsNewStepRoute,

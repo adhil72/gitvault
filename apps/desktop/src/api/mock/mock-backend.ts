@@ -28,6 +28,11 @@ function open(id: unknown): MockVault {
   return found.unlocked ? found : fail('E_LOCKED', 'the vault is locked')
 }
 
+/** What a locked vault still shows: names and metadata from the local index, never values or notes. */
+function browse(id: unknown): MockVault {
+  return vault(id)
+}
+
 function find(v: MockVault, id: unknown): MockSecret {
   return v.secrets.find((s) => s.id === id) ?? fail('E_NOT_FOUND', 'secret not found')
 }
@@ -62,8 +67,12 @@ function counts(values: (string | null)[]) {
   return [...map].sort(([a], [b]) => a.localeCompare(b)).map(([name, count]) => ({ name, count }))
 }
 
-function detail(s: MockSecret) {
-  return { ...toSummary(s), notes: s.notes, remind_before_days: s.remind_before_days }
+function detail(s: MockSecret, locked = false) {
+  return {
+    ...toSummary(s),
+    notes: locked ? '' : s.notes,
+    remind_before_days: s.remind_before_days,
+  }
 }
 
 function addSecret(i: AddSecretInput) {
@@ -224,6 +233,13 @@ const handlers: Record<string, Handler> = {
     seedDemo()
     return state.account
   },
+  auth_gh_accounts: () =>
+    state.ghAccounts.map((login) => ({ login, current: state.account?.login === login })),
+  auth_login_gh_account: (a) => {
+    if (!state.ghAccounts.includes(String(a.login))) fail('E_VALIDATION', 'unknown gh account')
+    seedDemo(String(a.login))
+    return state.account
+  },
   auth_logout: () => {
     state.account = null
   },
@@ -262,7 +278,7 @@ const handlers: Record<string, Handler> = {
       : fail('E_WRONG_PASSWORD', 'wrong master password'),
   secret_list: (a) => {
     const q = a.query as ListSecretsQuery
-    const items = open(q.vault_id)
+    const items = browse(q.vault_id)
       .secrets.filter((s) => matches(s, q))
       .map(toSummary)
     return items.sort((x, y) =>
@@ -270,7 +286,7 @@ const handlers: Record<string, Handler> = {
     )
   },
   secret_facets: (a) => {
-    const all = open(a.vaultId).secrets
+    const all = browse(a.vaultId).secrets
     return {
       total: all.length,
       favorites: all.filter((s) => s.favorite).length,
@@ -280,7 +296,7 @@ const handlers: Record<string, Handler> = {
       tags: counts(all.flatMap((s) => s.tags)),
     }
   },
-  secret_get: (a) => detail(find(open(a.vaultId), a.secretId)),
+  secret_get: (a) => detail(find(browse(a.vaultId), a.secretId), !vault(a.vaultId).unlocked),
   secret_reveal: (a) => {
     const s = find(open(a.vaultId), a.secretId)
     record(String(a.vaultId), 'viewed', s.name, s.id)
@@ -367,6 +383,7 @@ export async function mockInvoke(command: string, args: Args): Promise<unknown> 
 export function resetMock(): void {
   Object.assign(state, {
     account: null,
+    ghAccounts: [],
     vaults: [],
     current: null,
     audit: [],

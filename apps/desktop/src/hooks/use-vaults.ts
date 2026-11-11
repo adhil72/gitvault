@@ -45,6 +45,8 @@ function useVaultMutation<TVariables, TResult>(
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.vaults })
       void queryClient.invalidateQueries({ queryKey: ['vault'] })
+      // Locking or unlocking changes what secret reads return (the local name index has no notes).
+      void queryClient.invalidateQueries({ queryKey: ['secrets'] })
     },
   })
 }

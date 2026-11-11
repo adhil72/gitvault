@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router'
+import { useNavigate } from '@tanstack/react-router'
 import { KeyRound, Plus, Upload } from 'lucide-react'
 
 import { EmptyState } from '@/components/general/empty-state'
@@ -8,9 +8,12 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useCopySecret } from '@/hooks/use-clipboard'
 import { useSecrets } from '@/hooks/use-secrets'
+import { useRequireUnlock } from '@/hooks/use-require-unlock'
 import { useSettings } from '@/hooks/use-settings'
+import type { ApiError } from '@/lib/api-error'
 
 import { buildQuery, hasFilter } from './build-query'
+import { LockedNotice } from './locked-notice'
 import { DeleteSecretDialog } from './delete-secret-dialog'
 import { EditSecretSheet } from './edit-secret-sheet'
 import { ImportEnvDialog } from './import-env-dialog'
@@ -25,6 +28,8 @@ export function VaultPage() {
   const { vaultId, search } = nav
   const { data: secrets, isLoading, error } = useSecrets(buildQuery(vaultId, search))
   const copy = useCopySecret(vaultId)
+  const requireUnlock = useRequireUnlock(vaultId)
+  const unlockOnly = (error as ApiError | null)?.code === 'E_LOCKED'
   const empty = !isLoading && secrets?.length === 0
 
   return (
@@ -34,15 +39,16 @@ export function VaultPage() {
           count={secrets?.length ?? 0}
           search={search}
           onSort={nav.setSort}
-          onImport={() => nav.openPanel('import')}
+          onImport={() => requireUnlock(() => nav.openPanel('import'))}
         />
-        <ErrorNotice error={error} />
+        <LockedNotice vaultId={vaultId} nothingReadable={unlockOnly} />
+        <ErrorNotice error={unlockOnly ? null : error} />
         {isLoading ? <ListSkeleton /> : null}
         {empty ? (
           <NoSecrets
             vaultId={vaultId}
             filtered={hasFilter(search)}
-            onImport={() => nav.openPanel('import')}
+            onImport={() => requireUnlock(() => nav.openPanel('import'))}
           />
         ) : null}
         <ul className="flex flex-col gap-2 px-6 pb-6">
@@ -52,7 +58,7 @@ export function VaultPage() {
               secret={secret}
               selected={search.secret === secret.id}
               onSelect={() => nav.select(secret.id)}
-              onCopy={() => copy.mutate(secret.id)}
+              onCopy={() => requireUnlock(() => copy.mutate(secret.id))}
             />
           ))}
         </ul>
@@ -86,6 +92,10 @@ function NoSecrets({
   filtered: boolean
   onImport: () => void
 }) {
+  const navigate = useNavigate()
+  const requireUnlock = useRequireUnlock(vaultId)
+  const goToAddSecret = () =>
+    void navigate({ to: '/vaults/$vaultId/secrets/new/$step', params: { vaultId, step: 'type' } })
   if (filtered) {
     return (
       <EmptyState
@@ -101,10 +111,8 @@ function NoSecrets({
       title="No secrets in this vault yet"
       description="Add your first secret or import an existing .env file to get started."
     >
-      <Button asChild>
-        <Link to="/vaults/$vaultId/secrets/new/$step" params={{ vaultId, step: 'type' }}>
-          <Plus /> Add secret
-        </Link>
+      <Button onClick={() => requireUnlock(goToAddSecret)}>
+        <Plus /> Add secret
       </Button>
       <Button variant="secondary" onClick={onImport}>
         <Upload /> Import .env

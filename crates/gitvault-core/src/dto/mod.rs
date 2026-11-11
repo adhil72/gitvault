@@ -36,6 +36,13 @@ dto! {
         pub avatar_url: String,
     }
 
+    /// An account known to the local GitHub CLI.
+    pub struct GhAccountDto {
+        pub login: String,
+        /// The account GitVault is currently signed in with.
+        pub current: bool,
+    }
+
     pub struct DeviceCodeDto {
         pub device_code: String,
         pub user_code: String,

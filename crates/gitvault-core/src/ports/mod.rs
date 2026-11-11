@@ -14,7 +14,7 @@ mod version_control;
 
 pub use audit_sink::AuditSink;
 pub use clock::Clock;
-pub use gh_cli::GhCli;
+pub use gh_cli::{GhCli, GhCliAccount};
 pub use git_host::{DeviceCode, DevicePoll, GitHost, RemoteRepo, RepoAccess};
 pub use id_generator::IdGenerator;
 pub use key_value_store::KeyValueStore;

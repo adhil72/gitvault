@@ -24,9 +24,10 @@ function secret(
   }
 }
 
-/** Seeds a signed-in demo account with one unlocked vault (sign in with the token "demo"). */
-export function seedDemo(): void {
-  state.account = { login: 'octocat', id: 1, name: 'The Octocat', avatar_url: '' }
+/** Seeds a signed-in demo account with one locked vault (password `demo-password-1`). */
+export function seedDemo(login = 'octocat'): void {
+  state.ghAccounts = ['octocat', 'hubot']
+  state.account = { login, id: login === 'octocat' ? 1 : 2, name: login, avatar_url: '' }
   const vault: MockVault = {
     id: newId(),
     name: 'Personal vault',
@@ -34,7 +35,7 @@ export function seedDemo(): void {
     repo: 'octocat/gitvault-personal',
     password: 'demo-password-1',
     recoveryKey: 'DEMO-DEMO-DEMO-DEMO-DEMO-DEMO-DEMO-DEMO',
-    unlocked: true,
+    unlocked: false,
     secrets: [
       secret({
         name: 'STRIPE_SECRET_KEY',

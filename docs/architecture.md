@@ -578,8 +578,8 @@ apps/desktop/src/
 - Each route imports **one** page component from `@/components/pages/...`. Layout routes (`_public`, `_wizard`, `_app`) import their layout from `components/general/layouts`.
 - Router context is typed: `{ queryClient, auth }`. Guards:
   - `_authed.beforeLoad` → no GitHub session ⇒ `redirect({ to: '/sign-in' })`.
-  - `_app.beforeLoad` (vault routes) → vault locked ⇒ `redirect({ to: '/vaults/$vaultId/unlock', search: { redirect } })`.
-  - Backend `vault-locked` (auto-lock) event ⇒ router navigates to unlock.
+  - Vault routes open **locked** (see `docs/adr/0001-locked-by-default-vault-browsing.md`): names come from a device-local index and key-needing actions open the unlock dialog (`useRequireUnlock`). There is no unlock route.
+  - Backend `vault-locked` (auto-lock) event ⇒ the vault page falls back to the locked view.
 - Wizard step is a **path param** validated against a step list; invalid or skipped steps redirect to the first incomplete step.
 - Filters (environment, group, query, sort) are **validated search params**, so they survive reloads and are linkable.
 - Use typed `<Link>` / `useNavigate`; never build URL strings by hand.

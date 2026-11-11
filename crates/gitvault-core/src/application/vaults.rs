@@ -318,6 +318,7 @@ impl VaultService {
         let id = VaultId::parse(vault_id)?;
         self.ctx.sessions.remove(&id)?;
         self.ctx.storage.remove(&id)?;
+        self.ctx.kv.delete(&keys::catalog(id.as_str()))?;
         if self.current().as_deref() == Some(id.as_str()) {
             self.ctx.kv.delete(keys::CURRENT_VAULT)?;
         }
