@@ -5,6 +5,26 @@ All notable changes to GitVault are listed here, newest first. The format follow
 [Semantic Versioning](https://semver.org/). The same history is published at
 https://adhil72.github.io/gitvault-website/changelog/.
 
+## [0.5.0] - 2026-11-12
+
+### Added
+
+- **The CLI comes with the desktop app.** The Windows and Ubuntu installers now include the
+  `gitvault` command and put it on `PATH` (Windows: the user `PATH`, removed again on uninstall;
+  Ubuntu: `/usr/bin/gitvault`), so the Node library and terminals work right after installing.
+- **Connect button.** The header opens a dialog with copyable steps to load a vault into a Node.js
+  app. More runtimes can be added by listing them in `config/connect-targets.ts`.
+- **Switch warnings.** Switching vault or GitHub account asks for confirmation first.
+
+## [0.4.1] - 2026-11-12
+
+### Changed
+
+- **Node library tests in CI.** The `@adhil28/gitvault` tests run against the real CLI on pull
+  requests. The package is published to npm by hand rather than by the release workflow.
+- **Node library package.** Ships a `LICENSE` file, type definitions for `@adhil28/gitvault/config`,
+  keywords and a homepage link.
+
 ## [0.4.0] - 2026-11-11
 
 ### Added

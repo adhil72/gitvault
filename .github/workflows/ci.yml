@@ -57,3 +57,19 @@ jobs:
           git diff --exit-code apps/desktop/src/types
       - run: cargo clippy --workspace --all-targets -- -D warnings
       - run: cargo test --workspace
+
+  # The Node library's tests run the real CLI, so they are not covered by the frontend or cargo jobs.
+  node:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: pnpm --filter @adhil28/gitvault typecheck
+      - run: pnpm test:node

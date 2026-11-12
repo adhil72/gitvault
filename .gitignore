@@ -4,6 +4,8 @@ node_modules/
 # Build output
 dist/
 target/
+# CLI copied in as a Tauri sidecar by scripts/prepare-sidecar.mjs
+apps/desktop/src-tauri/binaries/
 *.tsbuildinfo
 
 # Env and secrets (never commit these)

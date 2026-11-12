@@ -1,7 +1,7 @@
 {
   "name": "gitvault",
   "private": true,
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Desktop and CLI secrets manager that stores encrypted vaults in your own private GitHub repository.",
   "scripts": {
     "dev": "pnpm --filter desktop tauri dev",
@@ -13,6 +13,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test",
+    "bundle": "node scripts/prepare-sidecar.mjs && pnpm --filter desktop tauri build --config src-tauri/tauri.bundle.conf.json",
     "gen:types": "cargo test -p gitvault-core export_bindings -q && node scripts/gen-types-index.mjs",
     "gen:docs": "cargo build -q -p gitvault-cli && node scripts/gen-cli-docs.mjs",
     "check:rust": "cargo fmt --all --check && cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace",

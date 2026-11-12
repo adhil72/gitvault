@@ -49,8 +49,55 @@ describe('opening the app', () => {
     await renderApp(`/vaults/${seedVault(false)}`)
     await user.click(await screen.findByRole('button', { name: 'Account menu' }))
     await user.click(await screen.findByRole('menuitem', { name: 'hubot' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Switch to hubot?' })
+    expect(state.account?.login).not.toBe('hubot')
+    await user.click(within(dialog).getByRole('button', { name: 'Switch account' }))
     expect(await screen.findByRole('heading', { name: 'Your vaults' })).toBeInTheDocument()
     expect(state.account?.login).toBe('hubot')
+  })
+
+  it('keeps the current account when the switch warning is cancelled', async () => {
+    const user = userEvent.setup()
+    await renderApp(`/vaults/${seedVault(false)}`)
+    const before = state.account?.login
+    await user.click(await screen.findByRole('button', { name: 'Account menu' }))
+    await user.click(await screen.findByRole('menuitem', { name: 'hubot' }))
+    await user.click(
+      within(await screen.findByRole('dialog')).getByRole('button', { name: 'Cancel' }),
+    )
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(state.account?.login).toBe(before)
+  })
+
+  it('warns before switching to another vault from the header', async () => {
+    const user = userEvent.setup()
+    const firstId = seedVault(false)
+    const first = state.vaults[0]
+    if (!first) throw new Error('seed missing')
+    state.vaults.push({ ...structuredClone(first), id: 'vault-two', name: 'Second vault' })
+    await renderApp(`/vaults/${firstId}`)
+    await user.click(await screen.findByRole('button', { name: 'Switch vault' }))
+    await user.click(await screen.findByRole('menuitem', { name: /Second vault/ }))
+    const dialog = await screen.findByRole('dialog', { name: 'Switch to Second vault?' })
+    await user.click(within(dialog).getByRole('button', { name: 'Switch vault' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    // The header's switcher button shows the open vault's name.
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Switch vault' })).toHaveTextContent(
+        'Second vault',
+      ),
+    )
+  })
+})
+
+describe('connect dialog', () => {
+  it('shows the Node.js connection steps from the header', async () => {
+    const user = userEvent.setup()
+    await renderApp(`/vaults/${seedVault(false)}`)
+    await user.click(await screen.findByRole('button', { name: /Connect/ }))
+    const dialog = await screen.findByRole('dialog', { name: 'Connect an app' })
+    expect(within(dialog).getByText('npm install @adhil28/gitvault')).toBeInTheDocument()
+    expect(within(dialog).getByText("import '@adhil28/gitvault/config'")).toBeInTheDocument()
   })
 })
 

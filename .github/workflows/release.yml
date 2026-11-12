@@ -131,6 +131,9 @@ jobs:
             timestampUrl = 'http://timestamp.digicert.com'
           } } } | ConvertTo-Json -Depth 5 | Set-Content $config
           "args=--config $config" >> $env:GITHUB_OUTPUT
+      # The installers carry the `gitvault` CLI as a sidecar, so installing the app installs the CLI.
+      - name: Build the CLI sidecar
+        run: node scripts/prepare-sidecar.mjs
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -142,7 +145,7 @@ jobs:
           releaseId: ${{ needs.create-release.outputs.release_id }}
           # latest.json is built in the publish job so its URLs point at the public releases repo.
           includeUpdaterJson: false
-          args: --bundles ${{ matrix.bundles }} ${{ steps.winsign.outputs.args }}
+          args: --bundles ${{ matrix.bundles }} --config src-tauri/tauri.bundle.conf.json ${{ steps.winsign.outputs.args }}
 
   # The source repository is private, so releases are published to the public
   # website repository, which also hosts the site. It is published immediately,
@@ -203,8 +206,9 @@ jobs:
           RELEASE_ID: ${{ needs.create-release.outputs.release_id }}
         run: gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" -F draft=false > /dev/null
 
-  # The Node library goes to the public npm registry. It needs only the checkout, not the desktop builds.
-  publish-npm:
+  # The Node library is not published to npm from CI. It is published by hand, and this job only
+  # mirrors a tarball of it next to the desktop builds in the public repository.
+  attach-node-library:
     needs: [prepare, publish]
     if: needs.prepare.outputs.release == 'true'
     runs-on: ubuntu-latest
@@ -220,24 +224,12 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-          registry-url: https://registry.npmjs.org
       - run: pnpm install --frozen-lockfile
       - name: Check the tag matches the package version
         run: |
           version=$(jq -r .version packages/node/package.json)
           test "v$version" = "$TAG" || { echo "::error::Tag $TAG does not match package version $version"; exit 1; }
       - run: pnpm --filter @adhil28/gitvault build
-      # Re-running a release must not fail because this version is already published.
-      - name: Publish
-        working-directory: packages/node
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          if npm view "@adhil28/gitvault@${TAG#v}" version >/dev/null 2>&1; then
-            echo "already published"
-          else
-            npm publish
-          fi
       # Mirror the library next to the desktop builds in the public repository,
       # as a downloadable tarball with its checksum. Needs the release that the
       # publish job creates, so this job waits for it.

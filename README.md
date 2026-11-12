@@ -9,7 +9,7 @@ Sign in with GitHub, protect each vault with a master password, and use the same
 
 ## Download
 
-Windows (`.exe`) and Ubuntu (`.deb`) installers are published at https://adhil72.github.io/gitvault-website/download/. The Windows app updates itself; every release lists `SHA256SUMS` for verification.
+Windows (`.exe`) and Ubuntu (`.deb`) installers are published at https://adhil72.github.io/gitvault-website/download/. The installers also install the `gitvault` command-line tool (on `PATH`), so there is nothing else to set up. The Windows app updates itself; every release lists `SHA256SUMS` for verification.
 
 ## What works
 
@@ -106,6 +106,7 @@ Data lives in `~/.local/share/gitvault` (override with `GITVAULT_HOME`). Unlocke
 pnpm check:all     # frontend format/lint/types/tests + Rust fmt/clippy/tests
 pnpm gen:types     # regenerate TypeScript types from the Rust DTOs
 pnpm gen:docs      # regenerate docs/cli.md
+pnpm bundle        # build the CLI sidecar, then the desktop installers that include it
 ```
 
 ## Security notes

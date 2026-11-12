@@ -1,0 +1,10 @@
+{
+  "bundle": {
+    "externalBin": ["binaries/gitvault"],
+    "windows": {
+      "nsis": {
+        "installerHooks": "installer/hooks.nsh"
+      }
+    }
+  }
+}

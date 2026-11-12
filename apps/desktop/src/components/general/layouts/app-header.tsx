@@ -1,7 +1,8 @@
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
-import { PanelLeft, Plus, Search } from 'lucide-react'
+import { PanelLeft, Plug, Plus, Search } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
+import { ConnectDialog } from '@/components/general/connect-dialog'
 import { AccountMenu } from '@/components/general/layouts/account-menu'
 import { Logo } from '@/components/general/logo-mark'
 import { SyncIndicator } from '@/components/general/sync-indicator'
@@ -56,6 +57,7 @@ export function AppHeader({ vaultId }: { vaultId: string }) {
   const collapsed = useSidebar((s) => s.collapsed)
   const toggleSidebar = useSidebar((s) => s.toggle)
   const requireUnlock = useRequireUnlock(vaultId)
+  const [connectOpen, setConnectOpen] = useState(false)
   const goToAddSecret = () =>
     void navigate({ to: '/vaults/$vaultId/secrets/new/$step', params: { vaultId, step: 'type' } })
   return (
@@ -92,11 +94,15 @@ export function AppHeader({ vaultId }: { vaultId: string }) {
             /
           </kbd>
         </div>
+        <Button variant="secondary" className="h-9 rounded-lg" onClick={() => setConnectOpen(true)}>
+          <Plug /> Connect
+        </Button>
         <Button className="h-9 rounded-lg" onClick={() => requireUnlock(goToAddSecret)}>
           <Plus /> Add secret
         </Button>
         <AccountMenu vaultId={vaultId} />
       </div>
+      <ConnectDialog open={connectOpen} onOpenChange={setConnectOpen} />
     </header>
   )
 }

@@ -35,3 +35,7 @@ pnpm --filter @adhil28/gitvault build      # tsup -> dist (ESM, CJS, .d.ts)
 pnpm --filter @adhil28/gitvault typecheck
 pnpm test:node                    # builds the CLI and runs the integration tests
 ```
+
+## License
+
+MIT. See [LICENSE](./LICENSE).
