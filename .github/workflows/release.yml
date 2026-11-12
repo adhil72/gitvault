@@ -157,6 +157,8 @@ jobs:
       TAG: ${{ needs.prepare.outputs.tag }}
       PUBLIC_REPO: adhil72/gitvault-website
     steps:
+      # Needed for scripts/build-apt-repo.sh; this job otherwise only handles release assets.
+      - uses: actions/checkout@v4
       - name: Download the built assets
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
