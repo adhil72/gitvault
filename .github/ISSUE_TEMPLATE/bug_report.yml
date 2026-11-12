@@ -1,0 +1,35 @@
+name: Bug report
+description: Something does not work as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Security problems:** do not report them here. Use the private form in SECURITY.md.
+        Never paste real secrets, master passwords, tokens or recovery keys.
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options: [Desktop app, CLI, Node library, Vite plugin, Vault format, Other]
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: GitVault version and OS
+      placeholder: '0.6.1, Ubuntu 24.04'
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true

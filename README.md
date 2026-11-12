@@ -120,3 +120,9 @@ pnpm bundle        # build the CLI sidecar, then the desktop installers that inc
 - The sign-in uses the `repo` scope (needed to create and push to a private repository). A narrower GitHub App is a
   recommended follow-up.
 - Commits are unsigned; the app never shows a "Verified" badge.
+
+## Contributing and license
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). Report vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
+
+GitVault is released under the [MIT License](LICENSE).
