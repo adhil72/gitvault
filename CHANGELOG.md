@@ -5,6 +5,15 @@ All notable changes to GitVault are listed here, newest first. The format follow
 [Semantic Versioning](https://semver.org/). The same history is published at
 https://adhil72.github.io/gitvault-website/changelog/.
 
+## [0.6.1] - 2026-11-12
+
+### Added
+
+- **Signed apt repository.** Ubuntu and Debian users can install and update GitVault with `apt`.
+  Each release publishes a GPG-signed repository; see `docs/apt-repository.md` for the install
+  steps and the key fingerprint.
+- **Security policy.** `SECURITY.md` explains how to report a vulnerability privately.
+
 ## [0.6.0] - 2026-11-12
 
 ### Added
