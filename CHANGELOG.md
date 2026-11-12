@@ -5,6 +5,14 @@ All notable changes to GitVault are listed here, newest first. The format follow
 [Semantic Versioning](https://semver.org/). The same history is published at
 https://adhil72.github.io/gitvault-website/changelog/.
 
+## [0.6.0] - 2026-11-12
+
+### Added
+
+- **Vite plugin.** `@adhil28/gitvault/vite` loads a GitVault environment before Vite reads its env,
+  so Vite projects need no `.env` file. The environment defaults to `GITVAULT_ENV`, then the Vite
+  mode; only `VITE_` variables reach client code.
+
 ## [0.5.0] - 2026-11-12
 
 ### Added

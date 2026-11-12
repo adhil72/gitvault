@@ -9,6 +9,8 @@ import {
   vaultInfo,
   vaultList,
   vaultLock,
+  vaultRemoteStatus,
+  vaultRepublish,
   vaultRegenerateRecovery,
   vaultUnlock,
   vaultUse,
@@ -36,6 +38,15 @@ export const useRemoteVaults = (enabled: boolean) =>
 export const useVault = (vaultId: string) =>
   useQuery({ ...vaultQueryOptions(vaultId), refetchInterval: 20_000 })
 
+/** Asks GitHub whether the vault's repository still exists. Needs the network, so it never retries. */
+export const useRemoteStatus = (vaultId: string) =>
+  useQuery({
+    queryKey: queryKeys.remoteStatus(vaultId),
+    queryFn: () => vaultRemoteStatus(vaultId),
+    staleTime: 60_000,
+    retry: false,
+  })
+
 function useVaultMutation<TVariables, TResult>(
   mutationFn: (variables: TVariables) => Promise<TResult>,
 ) {
@@ -56,6 +67,7 @@ export const useConnectVault = () => useVaultMutation(vaultConnect)
 export const useUnlockVault = () => useVaultMutation(vaultUnlock)
 export const useLockVault = () => useVaultMutation(vaultLock)
 export const useUseVault = () => useVaultMutation(vaultUse)
+export const useRepublishVault = () => useVaultMutation(vaultRepublish)
 export const useForgetVault = () => useVaultMutation(vaultForget)
 
 export const useChangePassword = () =>

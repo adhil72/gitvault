@@ -4,6 +4,7 @@ import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
 
 import { DatePicker } from '@/components/general/date-picker'
+import { EnvironmentField } from '@/components/general/environment-field'
 import { ErrorNotice } from '@/components/general/error-notice'
 import { FormField } from '@/components/general/form-field'
 import { Button } from '@/components/ui/button'
@@ -110,7 +111,18 @@ export function EditSecretSheet({ nav }: { nav: ReturnType<typeof useVaultNav> }
           </FormField>
           <div className="grid grid-cols-2 gap-3">
             <FormField label="Environment" htmlFor="edit-env">
-              <Input id="edit-env" className="h-10 bg-inset" {...register('environment')} />
+              <Controller
+                control={control}
+                name="environment"
+                render={({ field }) => (
+                  <EnvironmentField
+                    id="edit-env"
+                    value={field.value}
+                    onChange={field.onChange}
+                    vaultId={nav.vaultId}
+                  />
+                )}
+              />
             </FormField>
           </div>
           <FormField label="Tags" htmlFor="edit-tags" hint="Separate with commas">

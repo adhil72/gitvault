@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "website",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--dir", "/home/adhil/projects/gitvault-website", "dev", "--port", "4321"],
+      "port": 4321
+    },
+    {
+      "name": "desktop-web",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--dir", "/home/adhil/projects/gitvault/apps/desktop", "dev"],
+      "port": 1420
+    }
+  ]
+}

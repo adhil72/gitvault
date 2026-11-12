@@ -12,7 +12,10 @@ use crate::{
         ids::VaultId,
         vault::{VaultHeader, VaultName},
     },
-    dto::{CreateVaultInput, CreatedVault, UnlockInput, VaultList, VaultState, VaultSummary},
+    dto::{
+        CreateVaultInput, CreatedVault, RemoteStatus, UnlockInput, VaultList, VaultState,
+        VaultSummary,
+    },
     error::CoreError,
 };
 
@@ -174,12 +177,84 @@ impl VaultService {
             .description
             .as_deref()
             .unwrap_or("GitVault encrypted vault");
-        let repo = self.ctx.host.create_repo(token, &repo_name, description)?;
+        self.push_to_new_repo(id, &repo_name, description, token)
+    }
+
+    fn push_to_new_repo(
+        &self,
+        id: &VaultId,
+        repo_name: &str,
+        description: &str,
+        token: &str,
+    ) -> Result<(), CoreError> {
+        let repo = self.ctx.host.create_repo(token, repo_name, description)?;
         self.ctx.vcs.set_remote(id, &repo.clone_url)?;
         self.ctx
             .vcs
             .sync(id, Some(token), &self.ctx.author())
             .map(|_| ())
+    }
+
+    /// Whether the vault's GitHub repository is still reachable (contacts GitHub).
+    ///
+    /// GitHub answers 404 both for a deleted repository and for a private one the user may
+    /// not see. The two are told apart only when the repository belongs to the signed-in
+    /// account, because an owner can always see their own repositories.
+    ///
+    /// # Errors
+    /// [`CoreError::NotAuthenticated`] when not signed in, [`CoreError::NotFound`] for an
+    /// unknown vault.
+    pub fn remote_status(&self, vault_id: &str) -> Result<RemoteStatus, CoreError> {
+        let id = VaultId::parse(vault_id)?;
+        self.ctx.storage.read_header(&id)?;
+        let Some(repo) = self.remote_repo(&id) else {
+            return Ok(RemoteStatus::LocalOnly);
+        };
+        match self.ctx.host.repo_access(&self.ctx.token()?, &repo) {
+            Ok(RepoAccess::None) if self.owns(&repo) => Ok(RemoteStatus::Missing),
+            Ok(RepoAccess::None) => Ok(RemoteStatus::NoAccess),
+            Ok(_) => Ok(RemoteStatus::Reachable),
+            Err(CoreError::Network(_)) => Ok(RemoteStatus::Offline),
+            Err(other) => Err(other),
+        }
+    }
+
+    /// Creates a new private repository for a vault whose repository was deleted, and pushes
+    /// the local copy to it. The new repository keeps the old name when it is free.
+    ///
+    /// # Errors
+    /// [`CoreError::Conflict`] when the old repository still exists or the name is taken.
+    pub fn republish(&self, vault_id: &str) -> Result<VaultSummary, CoreError> {
+        let id = VaultId::parse(vault_id)?;
+        if !matches!(self.remote_status(vault_id)?, RemoteStatus::Missing) {
+            return Err(CoreError::Conflict(
+                "the GitHub repository still exists".into(),
+            ));
+        }
+        let token = self.ctx.token()?;
+        let name = self
+            .remote_repo(&id)
+            .and_then(|repo| repo.rsplit('/').next().map(str::to_owned))
+            .unwrap_or_default();
+        let description = self.ctx.storage.read_header(&id)?.description;
+        self.push_to_new_repo(&id, &name, &description, &token)?;
+        self.summary(&id, self.current().as_deref())
+    }
+
+    fn remote_repo(&self, id: &VaultId) -> Option<String> {
+        self.ctx
+            .vcs
+            .remote_url(id)
+            .ok()
+            .flatten()
+            .and_then(|url| parse_repo_url(&url))
+    }
+
+    fn owns(&self, repo: &str) -> bool {
+        let owner = repo.split('/').next().unwrap_or_default();
+        self.ctx
+            .account()
+            .is_some_and(|account| account.login.eq_ignore_ascii_case(owner))
     }
 
     /// Clones a vault found on GitHub onto this computer.
@@ -371,24 +446,15 @@ impl VaultService {
     ///
     /// GitHub's repository permissions are the access list: the project manager removes
     /// someone from the repo and they can no longer unlock the vault here. Offline the check
-    /// is skipped (the master password is still required), and local-only vaults have no repo.
+    /// is skipped (the master password is still required), local-only vaults have no repo,
+    /// and an owner whose repository was deleted may still open their local copy.
     pub(super) fn require_repo_access(&self, id: &VaultId) -> Result<(), CoreError> {
-        let Some(repo) = self
-            .ctx
-            .vcs
-            .remote_url(id)
-            .ok()
-            .flatten()
-            .and_then(|url| parse_repo_url(&url))
-        else {
-            return Ok(());
-        };
-        match self.ctx.host.repo_access(&self.ctx.token()?, &repo) {
-            Ok(RepoAccess::None) => Err(CoreError::PermissionDenied(format!(
-                "your GitHub account has no access to {repo}"
+        match self.remote_status(id.as_str())? {
+            RemoteStatus::NoAccess => Err(CoreError::PermissionDenied(format!(
+                "your GitHub account has no access to {}",
+                self.remote_repo(id).unwrap_or_default()
             ))),
-            Ok(_) | Err(CoreError::Network(_)) => Ok(()),
-            Err(other) => Err(other),
+            _ => Ok(()),
         }
     }
 
@@ -398,13 +464,7 @@ impl VaultService {
 
     fn summary(&self, id: &VaultId, current: Option<&str>) -> Result<VaultSummary, CoreError> {
         let header = self.ctx.storage.read_header(id)?;
-        let repo = self
-            .ctx
-            .vcs
-            .remote_url(id)
-            .ok()
-            .flatten()
-            .and_then(|url| parse_repo_url(&url));
+        let repo = self.remote_repo(id);
         Ok(VaultSummary {
             id: Some(id.to_string()),
             name: header.name,

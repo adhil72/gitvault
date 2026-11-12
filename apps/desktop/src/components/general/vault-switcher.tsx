@@ -1,10 +1,11 @@
 import { useNavigate } from '@tanstack/react-router'
-import { ChevronDown, Database, Plus } from 'lucide-react'
+import { ChevronDown, Database, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
 import { ConfirmDialog } from '@/components/general/confirm-dialog'
 import { GithubMark } from '@/components/general/github-mark'
+import { RemoveVaultDialog } from '@/components/general/remove-vault-dialog'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -23,6 +24,7 @@ export function VaultSwitcher({ vaultId }: { vaultId: string }) {
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
   const [target, setTarget] = useState<VaultSummary | null>(null)
+  const [removing, setRemoving] = useState(false)
   const { data } = useVaults()
   const remote = useRemoteVaults(menuOpen)
   const vaults = [...(data?.vaults ?? []), ...(remote.data?.vaults ?? [])]
@@ -62,23 +64,12 @@ export function VaultSwitcher({ vaultId }: { vaultId: string }) {
             Your vaults
           </DropdownMenuLabel>
           {vaults.map((vault) => (
-            <DropdownMenuItem
+            <VaultMenuItem
               key={vault.id ?? vault.repo}
-              className="gap-3 py-2"
+              vault={vault}
               // Re-selecting the open vault is a no-op, so it needs no warning.
               onSelect={() => (vault.id === vaultId ? undefined : setTarget(vault))}
-            >
-              <span className="flex size-8 items-center justify-center rounded-lg bg-muted">
-                <Database className="size-4" />
-              </span>
-              <span className="flex flex-1 flex-col">
-                <span className="font-mono text-[13px] font-medium">{vault.name}</span>
-                <span className="text-xs text-muted-foreground">
-                  {vault.repo ?? 'Local only'}
-                  {vault.id ? '' : ' · click to connect'}
-                </span>
-              </span>
-            </DropdownMenuItem>
+            />
           ))}
           <DropdownMenuSeparator />
           <DropdownMenuItem
@@ -93,8 +84,16 @@ export function VaultSwitcher({ vaultId }: { vaultId: string }) {
           >
             <GithubMark className="size-4" /> All vaults…
           </DropdownMenuItem>
+          <DropdownMenuItem
+            variant="destructive"
+            className="gap-3 py-2"
+            onSelect={() => setRemoving(true)}
+          >
+            <Trash2 className="size-4" /> Remove from this device
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      <RemoveVaultDialog open={removing} vaultId={vaultId} onClose={() => setRemoving(false)} />
       <ConfirmDialog
         open={target !== null}
         title={`Switch to ${target?.name ?? 'this vault'}?`}
@@ -105,5 +104,22 @@ export function VaultSwitcher({ vaultId }: { vaultId: string }) {
         onCancel={() => setTarget(null)}
       />
     </>
+  )
+}
+
+function VaultMenuItem({ vault, onSelect }: { vault: VaultSummary; onSelect: () => void }) {
+  return (
+    <DropdownMenuItem className="gap-3 py-2" onSelect={onSelect}>
+      <span className="flex size-8 items-center justify-center rounded-lg bg-muted">
+        <Database className="size-4" />
+      </span>
+      <span className="flex flex-1 flex-col">
+        <span className="font-mono text-[13px] font-medium">{vault.name}</span>
+        <span className="text-xs text-muted-foreground">
+          {vault.repo ?? 'Local only'}
+          {vault.id ? '' : ' · click to connect'}
+        </span>
+      </span>
+    </DropdownMenuItem>
   )
 }

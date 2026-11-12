@@ -145,7 +145,8 @@ gitvault/
 │     ├─ src-tauri/              # Tauri shell (Rust) – thin commands only
 │     └─ src/                    # React frontend (routes/, components/{ui,general,pages}, … see §9.3)
 ├─ packages/
-│  └─ tokens/                    # design tokens (generated from Figma variables → CSS/TS)
+│  ├─ tokens/                    # design tokens (generated from Figma variables → CSS/TS)
+│  └─ node/                      # `@adhil28/gitvault`: loads a vault into process.env, Vite plugin
 ├─ scripts/                      # dev scripts (codegen, release helpers)
 └─ .github/
    ├─ workflows/                 # ci.yml, release.yml, security.yml

@@ -6,6 +6,7 @@ export const queryKeys = {
   ghAccounts: ['auth', 'gh-accounts'] as const,
   vaults: ['vaults'] as const,
   remoteVaults: ['vaults', 'remote'] as const,
+  remoteStatus: (vaultId: string) => ['vault', vaultId, 'remote-status'] as const,
   vault: (vaultId: string) => ['vault', vaultId] as const,
   secrets: (vaultId: string) => ['secrets', vaultId] as const,
   secretList: (query: ListSecretsQuery) => ['secrets', query.vault_id, 'list', query] as const,

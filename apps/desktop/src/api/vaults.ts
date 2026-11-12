@@ -4,6 +4,7 @@ import type {
   CreateVaultInput,
   DeviceDto,
   InviteCollaboratorInput,
+  RemoteStatus,
   TrustedDeviceDto,
   UnlockInput,
   VaultList,
@@ -35,6 +36,10 @@ export const vaultLock = (vaultId: string) => call<void>('vault_lock', { vaultId
 export const vaultInfo = (vaultId: string) => call<VaultSummary>('vault_info', { vaultId })
 export const vaultUse = (vaultId: string) => call<VaultSummary>('vault_use', { vaultId })
 export const vaultForget = (vaultId: string) => call<void>('vault_forget', { vaultId })
+export const vaultRemoteStatus = (vaultId: string) =>
+  call<RemoteStatus>('vault_remote_status', { vaultId })
+export const vaultRepublish = (vaultId: string) =>
+  call<VaultSummary>('vault_republish', { vaultId })
 export const vaultCurrent = () => call<string | null>('vault_current')
 export const vaultChangePassword = (vaultId: string, current: string, newPassword: string) =>
   call<void>('vault_change_password', { vaultId, current, newPassword })

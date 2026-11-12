@@ -1,17 +1,15 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
 
+import { EnvironmentField } from '@/components/general/environment-field'
 import { FormField } from '@/components/general/form-field'
 import { PageHeading } from '@/components/general/page-heading'
 import { WizardActions } from '@/components/general/wizard-actions'
 import { Input } from '@/components/ui/input'
-import { useFacets } from '@/hooks/use-secrets'
 import { useAddSecretDraft } from '@/stores/add-secret-draft'
 
 import { useAddSecretNav } from '../use-add-secret-nav'
-
-const DEFAULT_ENVIRONMENTS = ['Production', 'Staging', 'Development']
 
 const schema = z.object({
   name: z
@@ -28,8 +26,7 @@ type Values = z.infer<typeof schema>
 export function DetailsStep() {
   const { vaultId, go } = useAddSecretNav()
   const draft = useAddSecretDraft()
-  const { data: facets } = useFacets(vaultId)
-  const { register, handleSubmit, formState } = useForm<Values>({
+  const { register, handleSubmit, control, formState } = useForm<Values>({
     resolver: zodResolver(schema),
     defaultValues: {
       name: draft.name,
@@ -37,9 +34,6 @@ export function DetailsStep() {
       tags: draft.tags,
     },
   })
-  const environments = [
-    ...new Set([...DEFAULT_ENVIRONMENTS, ...(facets?.environments.map((e) => e.name) ?? [])]),
-  ]
 
   const onSubmit = (values: Values) => {
     draft.update({ ...values, name: values.name.trim() })
@@ -59,17 +53,18 @@ export function DetailsStep() {
         />
       </FormField>
       <FormField label="Environment" htmlFor="secret-env" hint="Where it is used, e.g. Production">
-        <Input
-          id="secret-env"
-          list="environments"
-          className="h-10 bg-inset"
-          {...register('environment')}
+        <Controller
+          control={control}
+          name="environment"
+          render={({ field }) => (
+            <EnvironmentField
+              id="secret-env"
+              value={field.value}
+              onChange={field.onChange}
+              vaultId={vaultId}
+            />
+          )}
         />
-        <datalist id="environments">
-          {environments.map((e) => (
-            <option key={e} value={e} />
-          ))}
-        </datalist>
       </FormField>
       <FormField label="Tags" htmlFor="secret-tags" hint="Separate with commas">
         <Input

@@ -1,5 +1,5 @@
 import { Link, useSearch } from '@tanstack/react-router'
-import { Clock, History, KeyRound, SlidersHorizontal, Star, Wand2 } from 'lucide-react'
+import { BookOpen, Clock, History, KeyRound, SlidersHorizontal, Star, Wand2 } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { envDotClass } from '@/components/general/env-badge'
@@ -117,6 +117,15 @@ export function AppSidebar({ vaultId }: { vaultId: string }) {
         <Link to="/vaults/$vaultId/audit" params={{ vaultId }} className={NAV_LINK}>
           {({ isActive }) => (
             <Row label="Audit log" icon={<History className="size-4" />} active={isActive} />
+          )}
+        </Link>
+        <Link to="/vaults/$vaultId/docs/integration" params={{ vaultId }} className={NAV_LINK}>
+          {({ isActive }) => (
+            <Row
+              label="Integration guide"
+              icon={<BookOpen className="size-4" />}
+              active={isActive}
+            />
           )}
         </Link>
         <Link

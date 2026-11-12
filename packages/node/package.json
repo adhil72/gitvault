@@ -1,6 +1,6 @@
 {
   "name": "@adhil28/gitvault",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Load your GitVault secrets into process.env at startup. No .env files in the project.",
   "license": "MIT",
   "keywords": [
@@ -8,7 +8,9 @@
     "env",
     "dotenv",
     "environment-variables",
-    "gitvault"
+    "gitvault",
+    "vite",
+    "vite-plugin"
   ],
   "type": "module",
   "main": "./dist/index.cjs",
@@ -34,6 +36,16 @@
         "types": "./dist/config.d.cts",
         "default": "./dist/config.cjs"
       }
+    },
+    "./vite": {
+      "import": {
+        "types": "./dist/vite.d.ts",
+        "default": "./dist/vite.js"
+      },
+      "require": {
+        "types": "./dist/vite.d.cts",
+        "default": "./dist/vite.cjs"
+      }
     }
   },
   "files": [
@@ -51,7 +63,8 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "tsup": "^8.5.0",
-    "typescript": "^5.9.0"
+    "typescript": "^5.9.0",
+    "vite": "^8.3.7"
   },
   "repository": {
     "type": "git",
@@ -62,5 +75,13 @@
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org"
+  },
+  "peerDependencies": {
+    "vite": ">=5"
+  },
+  "peerDependenciesMeta": {
+    "vite": {
+      "optional": true
+    }
   }
 }

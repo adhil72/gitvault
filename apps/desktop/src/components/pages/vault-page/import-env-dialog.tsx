@@ -1,6 +1,7 @@
 import { useEffect, useState, type ChangeEvent } from 'react'
 import { toast } from 'sonner'
 
+import { EnvironmentField } from '@/components/general/environment-field'
 import { ErrorNotice } from '@/components/general/error-notice'
 import { FormField } from '@/components/general/form-field'
 import { Button } from '@/components/ui/button'
@@ -13,7 +14,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { useImportEnv, useImportPreview } from '@/hooks/use-secrets'
 
@@ -81,11 +81,11 @@ export function ImportEnvDialog({ nav }: { nav: ReturnType<typeof useVaultNav> }
         />
         <div className="grid grid-cols-2 gap-3">
           <FormField label="Environment" htmlFor="imp-env">
-            <Input
+            <EnvironmentField
               id="imp-env"
               value={environment}
-              onChange={(e) => setEnvironment(e.target.value)}
-              className="h-10 bg-inset"
+              onChange={setEnvironment}
+              vaultId={nav.vaultId}
             />
           </FormField>
         </div>

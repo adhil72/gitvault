@@ -279,6 +279,8 @@ const handlers: Record<string, Handler> = {
   vault_create: (a) => createVault(a.input as CreateVaultInput),
   vault_connect: () => fail('E_NOT_FOUND', 'repository not found'),
   vault_unlock: (a) => unlock(a.input as UnlockInput),
+  vault_remote_status: (a) => (vault(a.vaultId).repo ? 'reachable' : 'local_only'),
+  vault_republish: (a) => summaryOf(vault(a.vaultId)),
   vault_lock: (a) => {
     vault(a.vaultId).unlocked = false
   },

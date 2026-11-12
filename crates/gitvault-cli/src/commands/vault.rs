@@ -1,5 +1,5 @@
 use anyhow::Result;
-use gitvault_core::dto::{CreateVaultInput, UnlockInput, VaultState, VaultSummary};
+use gitvault_core::dto::{CreateVaultInput, RemoteStatus, UnlockInput, VaultState, VaultSummary};
 
 use crate::{
     app::App,
@@ -21,9 +21,24 @@ pub fn run(app: &App, cmd: &VaultCmd) -> Result<()> {
                 format!("Removed the local copy of {id}.")
             })
         }
+        VaultCmd::Remote => remote(app),
+        VaultCmd::Republish => show(app, &app.services.vaults.republish(&app.vault_id()?)?),
         VaultCmd::Password(args) => change_password(app, args),
         VaultCmd::Recovery(args) => new_recovery_key(app, args),
     }
+}
+
+fn remote(app: &App) -> Result<()> {
+    let status = app.services.vaults.remote_status(&app.vault_id()?)?;
+    app.emit(&status, || match status {
+        RemoteStatus::LocalOnly => "No GitHub repository (local vault).".to_owned(),
+        RemoteStatus::Reachable => "The GitHub repository is reachable.".to_owned(),
+        RemoteStatus::Missing => {
+            "The GitHub repository was deleted. Run `gitvault vault republish` to recreate it, or `gitvault vault forget <id>` to remove this copy.".to_owned()
+        }
+        RemoteStatus::NoAccess => "Your GitHub account cannot see the repository.".to_owned(),
+        RemoteStatus::Offline => "Could not reach GitHub.".to_owned(),
+    })
 }
 
 fn list(app: &App, remote: bool) -> Result<()> {

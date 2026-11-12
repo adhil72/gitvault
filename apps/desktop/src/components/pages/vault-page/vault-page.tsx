@@ -14,6 +14,7 @@ import type { ApiError } from '@/lib/api-error'
 
 import { buildQuery, hasFilter } from './build-query'
 import { LockedNotice } from './locked-notice'
+import { RemoteMissingBanner } from './remote-missing-banner'
 import { DeleteSecretDialog } from './delete-secret-dialog'
 import { EditSecretSheet } from './edit-secret-sheet'
 import { ImportEnvDialog } from './import-env-dialog'
@@ -41,6 +42,7 @@ export function VaultPage() {
           onSort={nav.setSort}
           onImport={() => requireUnlock(() => nav.openPanel('import'))}
         />
+        <RemoteMissingBanner vaultId={vaultId} />
         <LockedNotice vaultId={vaultId} nothingReadable={unlockOnly} />
         <ErrorNotice error={unlockOnly ? null : error} />
         {isLoading ? <ListSkeleton /> : null}

@@ -73,6 +73,8 @@ pub fn handler() -> impl Fn(tauri::ipc::Invoke) -> bool + Send + Sync + 'static 
         vault::vault_info,
         vault::vault_use,
         vault::vault_forget,
+        vault::vault_remote_status,
+        vault::vault_republish,
         vault::vault_current,
         vault::vault_change_password,
         vault::vault_regenerate_recovery,

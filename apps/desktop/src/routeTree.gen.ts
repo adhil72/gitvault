@@ -19,6 +19,7 @@ import { Route as AuthedVaultsVaultIdRouteImport } from './routes/_authed/vaults
 import { Route as AuthedVaultsVaultIdIndexRouteImport } from './routes/_authed/vaults.$vaultId.index'
 import { Route as AuthedVaultsVaultIdAuditRouteImport } from './routes/_authed/vaults.$vaultId.audit'
 import { Route as AuthedWizardVaultsNewStepRouteImport } from './routes/_authed/_wizard/vaults.new.$step'
+import { Route as AuthedVaultsVaultIdDocsIntegrationRouteImport } from './routes/_authed/vaults.$vaultId.docs.integration'
 import { Route as AuthedVaultsVaultIdHistorySecretIdRouteImport } from './routes/_authed/vaults.$vaultId.history.$secretId'
 import { Route as AuthedVaultsVaultIdSettingsTabRouteImport } from './routes/_authed/vaults.$vaultId.settings.$tab'
 import { Route as AuthedVaultsVaultIdToolsGeneratorRouteImport } from './routes/_authed/vaults.$vaultId.tools.generator'
@@ -74,6 +75,12 @@ const AuthedWizardVaultsNewStepRoute =
     path: '/vaults/new/$step',
     getParentRoute: () => AuthedWizardRoute,
   } as any)
+const AuthedVaultsVaultIdDocsIntegrationRoute =
+  AuthedVaultsVaultIdDocsIntegrationRouteImport.update({
+    id: '/docs/integration',
+    path: '/docs/integration',
+    getParentRoute: () => AuthedVaultsVaultIdRoute,
+  } as any)
 const AuthedVaultsVaultIdHistorySecretIdRoute =
   AuthedVaultsVaultIdHistorySecretIdRouteImport.update({
     id: '/history/$secretId',
@@ -107,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/vaults/$vaultId/audit': typeof AuthedVaultsVaultIdAuditRoute
   '/vaults/$vaultId/': typeof AuthedVaultsVaultIdIndexRoute
   '/vaults/new/$step': typeof AuthedWizardVaultsNewStepRoute
+  '/vaults/$vaultId/docs/integration': typeof AuthedVaultsVaultIdDocsIntegrationRoute
   '/vaults/$vaultId/history/$secretId': typeof AuthedVaultsVaultIdHistorySecretIdRoute
   '/vaults/$vaultId/settings/$tab': typeof AuthedVaultsVaultIdSettingsTabRoute
   '/vaults/$vaultId/tools/generator': typeof AuthedVaultsVaultIdToolsGeneratorRoute
@@ -119,6 +127,7 @@ export interface FileRoutesByTo {
   '/vaults/$vaultId/audit': typeof AuthedVaultsVaultIdAuditRoute
   '/vaults/$vaultId': typeof AuthedVaultsVaultIdIndexRoute
   '/vaults/new/$step': typeof AuthedWizardVaultsNewStepRoute
+  '/vaults/$vaultId/docs/integration': typeof AuthedVaultsVaultIdDocsIntegrationRoute
   '/vaults/$vaultId/history/$secretId': typeof AuthedVaultsVaultIdHistorySecretIdRoute
   '/vaults/$vaultId/settings/$tab': typeof AuthedVaultsVaultIdSettingsTabRoute
   '/vaults/$vaultId/tools/generator': typeof AuthedVaultsVaultIdToolsGeneratorRoute
@@ -136,6 +145,7 @@ export interface FileRoutesById {
   '/_authed/vaults/$vaultId/audit': typeof AuthedVaultsVaultIdAuditRoute
   '/_authed/vaults/$vaultId/': typeof AuthedVaultsVaultIdIndexRoute
   '/_authed/_wizard/vaults/new/$step': typeof AuthedWizardVaultsNewStepRoute
+  '/_authed/vaults/$vaultId/docs/integration': typeof AuthedVaultsVaultIdDocsIntegrationRoute
   '/_authed/vaults/$vaultId/history/$secretId': typeof AuthedVaultsVaultIdHistorySecretIdRoute
   '/_authed/vaults/$vaultId/settings/$tab': typeof AuthedVaultsVaultIdSettingsTabRoute
   '/_authed/vaults/$vaultId/tools/generator': typeof AuthedVaultsVaultIdToolsGeneratorRoute
@@ -151,6 +161,7 @@ export interface FileRouteTypes {
     | '/vaults/$vaultId/audit'
     | '/vaults/$vaultId/'
     | '/vaults/new/$step'
+    | '/vaults/$vaultId/docs/integration'
     | '/vaults/$vaultId/history/$secretId'
     | '/vaults/$vaultId/settings/$tab'
     | '/vaults/$vaultId/tools/generator'
@@ -163,6 +174,7 @@ export interface FileRouteTypes {
     | '/vaults/$vaultId/audit'
     | '/vaults/$vaultId'
     | '/vaults/new/$step'
+    | '/vaults/$vaultId/docs/integration'
     | '/vaults/$vaultId/history/$secretId'
     | '/vaults/$vaultId/settings/$tab'
     | '/vaults/$vaultId/tools/generator'
@@ -179,6 +191,7 @@ export interface FileRouteTypes {
     | '/_authed/vaults/$vaultId/audit'
     | '/_authed/vaults/$vaultId/'
     | '/_authed/_wizard/vaults/new/$step'
+    | '/_authed/vaults/$vaultId/docs/integration'
     | '/_authed/vaults/$vaultId/history/$secretId'
     | '/_authed/vaults/$vaultId/settings/$tab'
     | '/_authed/vaults/$vaultId/tools/generator'
@@ -263,6 +276,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedWizardVaultsNewStepRouteImport
       parentRoute: typeof AuthedWizardRoute
     }
+    '/_authed/vaults/$vaultId/docs/integration': {
+      id: '/_authed/vaults/$vaultId/docs/integration'
+      path: '/docs/integration'
+      fullPath: '/vaults/$vaultId/docs/integration'
+      preLoaderRoute: typeof AuthedVaultsVaultIdDocsIntegrationRouteImport
+      parentRoute: typeof AuthedVaultsVaultIdRoute
+    }
     '/_authed/vaults/$vaultId/history/$secretId': {
       id: '/_authed/vaults/$vaultId/history/$secretId'
       path: '/history/$secretId'
@@ -312,6 +332,7 @@ const AuthedWizardRouteWithChildren = AuthedWizardRoute._addFileChildren(
 interface AuthedVaultsVaultIdRouteChildren {
   AuthedVaultsVaultIdAuditRoute: typeof AuthedVaultsVaultIdAuditRoute
   AuthedVaultsVaultIdIndexRoute: typeof AuthedVaultsVaultIdIndexRoute
+  AuthedVaultsVaultIdDocsIntegrationRoute: typeof AuthedVaultsVaultIdDocsIntegrationRoute
   AuthedVaultsVaultIdHistorySecretIdRoute: typeof AuthedVaultsVaultIdHistorySecretIdRoute
   AuthedVaultsVaultIdSettingsTabRoute: typeof AuthedVaultsVaultIdSettingsTabRoute
   AuthedVaultsVaultIdToolsGeneratorRoute: typeof AuthedVaultsVaultIdToolsGeneratorRoute
@@ -320,6 +341,8 @@ interface AuthedVaultsVaultIdRouteChildren {
 const AuthedVaultsVaultIdRouteChildren: AuthedVaultsVaultIdRouteChildren = {
   AuthedVaultsVaultIdAuditRoute: AuthedVaultsVaultIdAuditRoute,
   AuthedVaultsVaultIdIndexRoute: AuthedVaultsVaultIdIndexRoute,
+  AuthedVaultsVaultIdDocsIntegrationRoute:
+    AuthedVaultsVaultIdDocsIntegrationRoute,
   AuthedVaultsVaultIdHistorySecretIdRoute:
     AuthedVaultsVaultIdHistorySecretIdRoute,
   AuthedVaultsVaultIdSettingsTabRoute: AuthedVaultsVaultIdSettingsTabRoute,

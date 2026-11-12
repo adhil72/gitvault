@@ -102,7 +102,7 @@ export function AppHeader({ vaultId }: { vaultId: string }) {
         </Button>
         <AccountMenu vaultId={vaultId} />
       </div>
-      <ConnectDialog open={connectOpen} onOpenChange={setConnectOpen} />
+      <ConnectDialog open={connectOpen} onOpenChange={setConnectOpen} vaultId={vaultId} />
     </header>
   )
 }

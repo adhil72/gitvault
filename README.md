@@ -86,6 +86,9 @@ variables instead: `GITVAULT_TOKEN` (a read-only GitHub token for the vault repo
 `E_LOCKED`; it never prompts. Keep production in its own vault so only the right people have its password.
 See [packages/node](packages/node).
 
+For Vite projects, add the plugin instead (`import { gitvault } from '@adhil28/gitvault/vite'`, then
+`plugins: [gitvault()]`). The Vite mode picks the environment, and only `VITE_` variables reach client code.
+
 ### CLI in 60 seconds
 
 ```bash

@@ -70,6 +70,19 @@ dto! {
         RemoteOnly,
     }
 
+    /// Whether a vault's GitHub repository can still be reached.
+    #[serde(rename_all = "snake_case")]
+    pub enum RemoteStatus {
+        /// The vault has no GitHub repository.
+        LocalOnly,
+        Reachable,
+        /// The signed-in owner's repository no longer exists (deleted on GitHub).
+        Missing,
+        /// The repository is hidden from this account: deleted or access revoked.
+        NoAccess,
+        Offline,
+    }
+
     pub struct VaultSummary {
         /// `None` for vaults that exist only on GitHub (not connected yet).
         pub id: Option<String>,

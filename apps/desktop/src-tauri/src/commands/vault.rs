@@ -1,6 +1,6 @@
 use gitvault_core::dto::{
-    CreateVaultInput, CreatedVault, DeviceDto, TrustedDeviceDto, UnlockInput, VaultList,
-    VaultSummary,
+    CreateVaultInput, CreatedVault, DeviceDto, RemoteStatus, TrustedDeviceDto, UnlockInput,
+    VaultList, VaultSummary,
 };
 
 use super::command;
@@ -18,6 +18,8 @@ command!(vault_lock(vault_id: String) -> () => |s| s.vaults.lock(&vault_id));
 command!(vault_info(vault_id: String) -> VaultSummary => |s| s.vaults.info(&vault_id));
 command!(vault_use(vault_id: String) -> VaultSummary => |s| s.vaults.use_vault(&vault_id));
 command!(vault_forget(vault_id: String) -> () => |s| s.vaults.forget(&vault_id));
+command!(vault_remote_status(vault_id: String) -> RemoteStatus => |s| s.vaults.remote_status(&vault_id));
+command!(vault_republish(vault_id: String) -> VaultSummary => |s| s.vaults.republish(&vault_id));
 command!(vault_current() -> Option<String> => |s| Ok(s.vaults.current()));
 command!(vault_change_password(vault_id: String, current: String, new_password: String) -> () => |s| {
     s.vaults.change_password(&vault_id, &current, &new_password)

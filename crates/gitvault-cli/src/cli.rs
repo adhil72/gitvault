@@ -187,6 +187,10 @@ pub enum VaultCmd {
     Connect { repo: String },
     /// Remove the local copy (GitHub is untouched).
     Forget { id: String },
+    /// Check whether the vault's GitHub repository still exists.
+    Remote,
+    /// Create a new GitHub repository for a vault whose repository was deleted.
+    Republish,
     /// Change the master password.
     Password(PasswordArgs),
     /// Create a new recovery key.

@@ -99,6 +99,26 @@ describe('connect dialog', () => {
     expect(within(dialog).getByText('npm install @adhil28/gitvault')).toBeInTheDocument()
     expect(within(dialog).getByText("import '@adhil28/gitvault/config'")).toBeInTheDocument()
   })
+
+  it('opens the detailed integration guide from the Connect dialog', async () => {
+    const user = userEvent.setup()
+    await renderApp(`/vaults/${seedVault(false)}`)
+    await user.click(await screen.findByRole('button', { name: /Connect/ }))
+    const dialog = await screen.findByRole('dialog', { name: 'Connect an app' })
+    await user.click(within(dialog).getByRole('link', { name: /Detailed docs/ }))
+    expect(await screen.findByRole('heading', { name: 'Integration guide' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Servers and CI' })).toBeInTheDocument()
+  })
+
+  it('switches to the Vite steps', async () => {
+    const user = userEvent.setup()
+    await renderApp(`/vaults/${seedVault(false)}`)
+    await user.click(await screen.findByRole('button', { name: /Connect/ }))
+    const dialog = await screen.findByRole('dialog', { name: 'Connect an app' })
+    await user.click(within(dialog).getByRole('tab', { name: /Vite/ }))
+    expect(within(dialog).getByText('vite.config.ts')).toBeInTheDocument()
+    expect(within(dialog).getByText(/@adhil28\/gitvault\/vite/)).toBeInTheDocument()
+  })
 })
 
 describe('locked vault', () => {
