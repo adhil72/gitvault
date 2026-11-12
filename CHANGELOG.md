@@ -5,6 +5,13 @@ All notable changes to GitVault are listed here, newest first. The format follow
 [Semantic Versioning](https://semver.org/). The same history is published at
 https://adhil72.github.io/gitvault-website/changelog/.
 
+## [1.0.0] - 2026-11-12
+
+### Changed
+
+- **First stable release.** GitVault is now 1.0.0. The sign-in screen shows the installed app
+  version instead of a fixed number.
+
 ## [0.6.1] - 2026-11-12
 
 ### Added
