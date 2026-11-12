@@ -1,4 +1,5 @@
 import { Logo } from '@/components/general/logo-mark'
+import { useAppVersion } from '@/hooks/use-updater'
 
 import { BRAND_FEATURES } from './brand-features'
 
@@ -9,6 +10,7 @@ interface BrandPanelProps {
 
 /** Left-hand panel of the auth and wizard layouts: logo, pitch and feature list. */
 export function BrandPanel({ headline, description }: BrandPanelProps) {
+  const { data: version } = useAppVersion()
   return (
     <aside className="flex flex-col justify-between border-r border-sidebar-border bg-sidebar p-14">
       <Logo />
@@ -30,7 +32,8 @@ export function BrandPanel({ headline, description }: BrandPanelProps) {
         </ul>
       </div>
       <p className="text-[13px] text-muted-foreground/70">
-        Version 1.0.0 · Secrets are stored locally, GitHub is only used for identity
+        {version ? `Version ${version} · ` : ''}Secrets are stored locally, GitHub is only used for
+        identity
       </p>
     </aside>
   )
