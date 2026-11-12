@@ -13,10 +13,12 @@ interface DatePickerProps {
   value: string
   onChange: (value: string) => void
   placeholder?: string
+  /** Extra classes for the trigger, to restyle it per page. */
+  className?: string
 }
 
 /** The date field used everywhere: a trigger showing "Dec 04, 2026" that opens a calendar popover. */
-export function DatePicker({ id, value, onChange, placeholder }: DatePickerProps) {
+export function DatePicker({ id, value, onChange, placeholder, className }: DatePickerProps) {
   const [open, setOpen] = useState(false)
   const pick = (iso: string) => {
     onChange(iso)
@@ -30,7 +32,7 @@ export function DatePicker({ id, value, onChange, placeholder }: DatePickerProps
           id={id}
           type="button"
           variant="outline"
-          className="h-10 w-full justify-between bg-inset px-3 font-normal"
+          className={cn('h-10 w-full justify-between bg-inset px-3 font-normal', className)}
         >
           <span className={cn('flex items-center gap-2', !value && 'text-muted-foreground')}>
             <CalendarDays className="size-4" />

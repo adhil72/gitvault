@@ -3,4 +3,4 @@
 /**
  * What a secret holds. Decides masking and which fields the UI shows.
  */
-export type SecretKind = "api_key" | "password" | "certificate" | "note" | "env_file";
+export type SecretKind = 'api_key' | 'password' | 'certificate' | 'note' | 'env_file'

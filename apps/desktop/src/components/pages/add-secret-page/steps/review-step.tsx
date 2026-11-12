@@ -1,22 +1,18 @@
-import { Info } from 'lucide-react'
+import { GitCommitHorizontal, Pencil } from 'lucide-react'
+import type { ReactNode } from 'react'
 
-import { Callout } from '@/components/general/callout'
+import { EnvBadge } from '@/components/general/env-badge'
 import { ErrorNotice } from '@/components/general/error-notice'
-import { PageHeading } from '@/components/general/page-heading'
-import { WizardActions } from '@/components/general/wizard-actions'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import type { AddSecretStep } from '@/config/wizards'
 import { useAddSecret } from '@/hooks/use-secrets'
 import { fromDateInput } from '@/lib/format'
 import { useAddSecretDraft } from '@/stores/add-secret-draft'
 
+import { StepActions } from '../step-actions'
+import { StepFrame } from '../step-frame'
 import { useAddSecretNav } from '../use-add-secret-nav'
-
-const KIND_LABELS = {
-  api_key: 'API key',
-  password: 'Password',
-  certificate: 'Certificate',
-  note: 'Note',
-  env_file: '.env file',
-} as const
 
 function parseTags(text: string): string[] {
   return text
@@ -25,10 +21,38 @@ function parseTags(text: string): string[] {
     .filter(Boolean)
 }
 
+const EMPTY = <span className="text-muted-foreground">Not set</span>
+
+interface ReviewRowProps {
+  label: string
+  step: AddSecretStep
+  onEdit: (step: AddSecretStep) => void
+  children: ReactNode
+}
+
+function ReviewRow({ label, step, onEdit, children }: ReviewRowProps) {
+  return (
+    <div className="flex items-center gap-4 py-3.5 text-sm">
+      <dt className="w-28 shrink-0 text-muted-foreground">{label}</dt>
+      <dd className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5 font-medium">{children}</dd>
+      <Button
+        type="button"
+        variant="ghost"
+        size="xs"
+        aria-label={`Edit ${label.toLowerCase()}`}
+        onClick={() => onEdit(step)}
+      >
+        <Pencil /> Edit
+      </Button>
+    </div>
+  )
+}
+
 export function ReviewStep() {
   const { vaultId, go } = useAddSecretNav()
   const draft = useAddSecretDraft()
   const add = useAddSecret(vaultId)
+  const tags = parseTags(draft.tags)
 
   const save = () => {
     const expires = fromDateInput(draft.expires)
@@ -39,7 +63,7 @@ export function ReviewStep() {
         kind: draft.kind,
         value: draft.value,
         environment: draft.environment || null,
-        tags: parseTags(draft.tags),
+        tags,
         notes: draft.notes || null,
         expires_at: expires,
         remind_before_days: expires === null ? null : Number(draft.remindDays),
@@ -53,40 +77,52 @@ export function ReviewStep() {
     )
   }
 
-  const rows: [string, string][] = [
-    ['Type', KIND_LABELS[draft.kind]],
-    ['Name', draft.name],
-    ['Environment', draft.environment || '-'],
-    ['Tags', parseTags(draft.tags).join(', ') || '-'],
-    ['Value', '••••••••' + draft.value.slice(-4)],
-    ['Expires', draft.expires || 'Never'],
-  ]
-
   return (
-    <div className="flex flex-col gap-5">
-      <PageHeading title="Review" description="Everything look right?" />
-      <dl className="flex flex-col rounded-lg border border-border bg-card">
-        {rows.map(([label, value], index) => (
-          <div
-            key={label}
-            className={`flex gap-3 px-4 py-2.5 text-[13px] ${index < rows.length - 1 ? 'border-b border-border' : ''}`}
-          >
-            <dt className="w-24 shrink-0 text-muted-foreground">{label}</dt>
-            <dd className="min-w-0 flex-1 truncate font-medium">{value}</dd>
-          </div>
-        ))}
+    <StepFrame
+      title="Review"
+      description="Check everything before it is encrypted and committed."
+      actions={
+        <StepActions
+          nextType="button"
+          nextLabel="Save secret"
+          nextIcon={null}
+          busy={add.isPending}
+          onNext={save}
+          onBack={() => go('expiry')}
+        />
+      }
+    >
+      <dl className="divide-y divide-border border-y border-border">
+        <ReviewRow label="Name" step="details" onEdit={go}>
+          <span className="truncate font-mono">{draft.name}</span>
+        </ReviewRow>
+        <ReviewRow label="Environment" step="details" onEdit={go}>
+          {draft.environment ? <EnvBadge name={draft.environment} /> : EMPTY}
+        </ReviewRow>
+        <ReviewRow label="Tags" step="details" onEdit={go}>
+          {tags.length > 0
+            ? tags.map((tag) => (
+                <Badge key={tag} variant="secondary">
+                  {tag}
+                </Badge>
+              ))
+            : EMPTY}
+        </ReviewRow>
+        <ReviewRow label="Value" step="value" onEdit={go}>
+          <span className="font-mono tracking-wider">{'••••••••' + draft.value.slice(-4)}</span>
+        </ReviewRow>
+        <ReviewRow label="Expires" step="expiry" onEdit={go}>
+          {draft.expires || <span className="text-muted-foreground">Never</span>}
+        </ReviewRow>
+        <ReviewRow label="Notes" step="expiry" onEdit={go}>
+          {draft.notes ? <span className="line-clamp-2 font-normal">{draft.notes}</span> : EMPTY}
+        </ReviewRow>
       </dl>
-      <Callout tone="info" icon={<Info className="size-4 text-info" />}>
+      <p className="flex items-center gap-2 text-[13px] text-muted-foreground">
+        <GitCommitHorizontal className="size-4 shrink-0" />
         Saving pushes an encrypted commit to your vault repository.
-      </Callout>
+      </p>
       <ErrorNotice error={add.error} />
-      <WizardActions
-        nextType="button"
-        nextLabel="Save secret"
-        busy={add.isPending}
-        onNext={save}
-        onBack={() => go('expiry')}
-      />
-    </div>
+    </StepFrame>
   )
 }

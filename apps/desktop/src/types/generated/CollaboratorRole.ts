@@ -3,4 +3,4 @@
 /**
  * What an invited user may do in the vault's repository.
  */
-export type CollaboratorRole = "read" | "write";
+export type CollaboratorRole = 'read' | 'write'

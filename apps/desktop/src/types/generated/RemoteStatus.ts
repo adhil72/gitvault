@@ -3,4 +3,4 @@
 /**
  * Whether a vault's GitHub repository can still be reached.
  */
-export type RemoteStatus = "local_only" | "reachable" | "missing" | "no_access" | "offline";
+export type RemoteStatus = 'local_only' | 'reachable' | 'missing' | 'no_access' | 'offline'

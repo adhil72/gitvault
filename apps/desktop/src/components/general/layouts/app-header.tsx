@@ -59,7 +59,10 @@ export function AppHeader({ vaultId }: { vaultId: string }) {
   const requireUnlock = useRequireUnlock(vaultId)
   const [connectOpen, setConnectOpen] = useState(false)
   const goToAddSecret = () =>
-    void navigate({ to: '/vaults/$vaultId/secrets/new/$step', params: { vaultId, step: 'type' } })
+    void navigate({
+      to: '/vaults/$vaultId/secrets/new/$step',
+      params: { vaultId, step: 'details' },
+    })
   return (
     <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-border/40 bg-inset px-4">
       <div className="flex items-center gap-3">

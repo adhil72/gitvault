@@ -26,6 +26,8 @@ interface SelectFieldProps {
   placeholder?: string
   /** Adds a "None" choice that maps to the empty string. */
   allowEmpty?: boolean
+  /** Extra classes for the trigger, to restyle it per page. */
+  className?: string
 }
 
 /** A searchable single-choice combobox (shadcn Popover + Command). */
@@ -36,6 +38,7 @@ export function SelectField({
   options,
   placeholder,
   allowEmpty,
+  className,
 }: SelectFieldProps) {
   const [open, setOpen] = useState(false)
   const choices = allowEmpty ? [{ value: '', label: 'None' }, ...options] : options
@@ -55,7 +58,7 @@ export function SelectField({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="h-10 w-full justify-between bg-inset px-3 font-normal"
+          className={cn('h-10 w-full justify-between bg-inset px-3 font-normal', className)}
         >
           <span className={cn('truncate', !selected && 'text-muted-foreground')}>
             {selected?.label ?? placeholder ?? 'Select…'}

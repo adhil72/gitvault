@@ -18,9 +18,22 @@ export const authQueryOptions = () =>
 
 export const useAccount = () => useQuery(authQueryOptions())
 
+const ghAccountsOptions = () =>
+  queryOptions({
+    queryKey: queryKeys.ghAccounts,
+    queryFn: authGhAccounts,
+    // Shelling out to `gh` is slow; the list rarely changes, so reuse it between opens.
+    staleTime: 60_000,
+  })
+
 /** Accounts known to the local `gh` CLI. Only fetched on request. */
-export const useGhAccounts = (enabled = true) =>
-  useQuery({ queryKey: queryKeys.ghAccounts, queryFn: authGhAccounts, enabled, staleTime: 0 })
+export const useGhAccounts = (enabled = true) => useQuery({ ...ghAccountsOptions(), enabled })
+
+/** Warms the `gh` account list (e.g. on hover) so the menu opens already populated. */
+export function usePrefetchGhAccounts() {
+  const queryClient = useQueryClient()
+  return () => void queryClient.prefetchQuery(ghAccountsOptions())
+}
 
 export function useLoginWithGh() {
   const queryClient = useQueryClient()

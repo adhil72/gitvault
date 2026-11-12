@@ -1,6 +1,10 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { VaultsHomePage } from '@/components/pages/vaults-home-page'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 
+import { resolveStartRoute } from '@/lib/resolve-start-route'
+
+// No vault picker: /vaults sends you to your last used vault, or to the empty page.
 export const Route = createFileRoute('/_authed/vaults/')({
-  component: VaultsHomePage,
+  beforeLoad: async ({ context }) => {
+    throw redirect(await resolveStartRoute(context.queryClient))
+  },
 })

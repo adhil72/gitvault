@@ -3,4 +3,4 @@
 /**
  * The only DTO that carries a plaintext secret value.
  */
-export type RevealedSecret = { value: string, };
+export type RevealedSecret = { value: string }

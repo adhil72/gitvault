@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as PublicRouteImport } from './routes/_public'
 import { Route as AuthedWizardRouteImport } from './routes/_authed/_wizard'
+import { Route as AuthedNoVaultRouteImport } from './routes/_authed/no-vault'
 import { Route as PublicSignInRouteImport } from './routes/_public/sign-in'
 import { Route as AuthedVaultsIndexRouteImport } from './routes/_authed/vaults.index'
 import { Route as AuthedVaultsVaultIdRouteImport } from './routes/_authed/vaults.$vaultId'
@@ -40,6 +41,11 @@ const PublicRoute = PublicRouteImport.update({
 } as any)
 const AuthedWizardRoute = AuthedWizardRouteImport.update({
   id: '/_wizard',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedNoVaultRoute = AuthedNoVaultRouteImport.update({
+  id: '/no-vault',
+  path: '/no-vault',
   getParentRoute: () => AuthedRoute,
 } as any)
 const PublicSignInRoute = PublicSignInRouteImport.update({
@@ -108,6 +114,7 @@ const AuthedWizardVaultsVaultIdSecretsNewStepRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/no-vault': typeof AuthedNoVaultRoute
   '/sign-in': typeof PublicSignInRoute
   '/vaults/$vaultId': typeof AuthedVaultsVaultIdRouteWithChildren
   '/vaults/': typeof AuthedVaultsIndexRoute
@@ -122,6 +129,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/no-vault': typeof AuthedNoVaultRoute
   '/sign-in': typeof PublicSignInRoute
   '/vaults': typeof AuthedVaultsIndexRoute
   '/vaults/$vaultId/audit': typeof AuthedVaultsVaultIdAuditRoute
@@ -139,6 +147,7 @@ export interface FileRoutesById {
   '/_authed': typeof AuthedRouteWithChildren
   '/_public': typeof PublicRouteWithChildren
   '/_authed/_wizard': typeof AuthedWizardRouteWithChildren
+  '/_authed/no-vault': typeof AuthedNoVaultRoute
   '/_public/sign-in': typeof PublicSignInRoute
   '/_authed/vaults/$vaultId': typeof AuthedVaultsVaultIdRouteWithChildren
   '/_authed/vaults/': typeof AuthedVaultsIndexRoute
@@ -155,6 +164,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/no-vault'
     | '/sign-in'
     | '/vaults/$vaultId'
     | '/vaults/'
@@ -169,6 +179,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/no-vault'
     | '/sign-in'
     | '/vaults'
     | '/vaults/$vaultId/audit'
@@ -185,6 +196,7 @@ export interface FileRouteTypes {
     | '/_authed'
     | '/_public'
     | '/_authed/_wizard'
+    | '/_authed/no-vault'
     | '/_public/sign-in'
     | '/_authed/vaults/$vaultId'
     | '/_authed/vaults/'
@@ -232,6 +244,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthedWizardRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/no-vault': {
+      id: '/_authed/no-vault'
+      path: '/no-vault'
+      fullPath: '/no-vault'
+      preLoaderRoute: typeof AuthedNoVaultRouteImport
       parentRoute: typeof AuthedRoute
     }
     '/_public/sign-in': {
@@ -355,12 +374,14 @@ const AuthedVaultsVaultIdRouteWithChildren =
 
 interface AuthedRouteChildren {
   AuthedWizardRoute: typeof AuthedWizardRouteWithChildren
+  AuthedNoVaultRoute: typeof AuthedNoVaultRoute
   AuthedVaultsVaultIdRoute: typeof AuthedVaultsVaultIdRouteWithChildren
   AuthedVaultsIndexRoute: typeof AuthedVaultsIndexRoute
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedWizardRoute: AuthedWizardRouteWithChildren,
+  AuthedNoVaultRoute: AuthedNoVaultRoute,
   AuthedVaultsVaultIdRoute: AuthedVaultsVaultIdRouteWithChildren,
   AuthedVaultsIndexRoute: AuthedVaultsIndexRoute,
 }

@@ -3,8 +3,10 @@
 /**
  * An account known to the local GitHub CLI.
  */
-export type GhAccountDto = { login: string, 
-/**
- * The account GitVault is currently signed in with.
- */
-current: boolean, };
+export type GhAccountDto = {
+  login: string
+  /**
+   * The account GitVault is currently signed in with.
+   */
+  current: boolean
+}

@@ -3,8 +3,11 @@
 /**
  * The error shape sent to the UI (and printed by the CLI in `--json` mode).
  */
-export type ApiErrorDto = { 
-/**
- * Stable code such as `E_LOCKED`.
- */
-code: string, message: string, hint: string | null, };
+export type ApiErrorDto = {
+  /**
+   * Stable code such as `E_LOCKED`.
+   */
+  code: string
+  message: string
+  hint: string | null
+}

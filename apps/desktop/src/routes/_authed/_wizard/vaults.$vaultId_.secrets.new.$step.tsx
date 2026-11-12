@@ -10,7 +10,7 @@ export const Route = createFileRoute('/_authed/_wizard/vaults/$vaultId_/secrets/
     if (!isStep(ADD_SECRET_STEPS, params.step)) {
       throw redirect({
         to: '/vaults/$vaultId/secrets/new/$step',
-        params: { vaultId: params.vaultId, step: 'type' },
+        params: { vaultId: params.vaultId, step: 'details' },
       })
     }
   },

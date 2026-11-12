@@ -3,4 +3,4 @@
 /**
  * Filter used by export / run: only secrets matching all given fields.
  */
-export type EnvFilter = { environment: string | null, tag: string | null, };
+export type EnvFilter = { environment: string | null; tag: string | null }

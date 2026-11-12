@@ -1,16 +1,15 @@
-import { Eye, EyeOff, Info, RefreshCw } from 'lucide-react'
+import { Eye, EyeOff, ShieldCheck, Sparkles } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 
-import { Callout } from '@/components/general/callout'
 import { FormField } from '@/components/general/form-field'
-import { PageHeading } from '@/components/general/page-heading'
-import { WizardActions } from '@/components/general/wizard-actions'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { useGenerate } from '@/hooks/use-tools'
 import { cn } from '@/lib/utils'
 import { useAddSecretDraft } from '@/stores/add-secret-draft'
 
+import { StepActions } from '../step-actions'
+import { StepFrame } from '../step-frame'
 import { useAddSecretNav } from '../use-add-secret-nav'
 
 const GENERATE_DEFAULTS = {
@@ -38,44 +37,56 @@ export function ValueStep() {
   }
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-5">
-      <PageHeading title="Secret value" description="The value is hidden by default." />
-      <FormField label="Value" htmlFor="secret-value">
-        <Textarea
-          id="secret-value"
-          autoFocus
-          value={value}
-          onChange={(e) => update({ value: e.target.value })}
-          placeholder="Paste the value or generate one"
-          className={cn(
-            'min-h-24 bg-inset font-mono text-[13px]',
-            !visible && 'text-security-disc [-webkit-text-security:disc]',
-          )}
-          spellCheck={false}
-          autoComplete="off"
-        />
-      </FormField>
-      <div className="flex items-center justify-between">
-        <Button
-          type="button"
-          variant="link"
-          size="sm"
-          className="px-0"
-          disabled={generate.isPending}
-          onClick={() =>
-            generate.mutate(GENERATE_DEFAULTS, { onSuccess: (g) => update({ value: g.value }) })
-          }
-        >
-          <RefreshCw /> Generate instead
-        </Button>
-        <Button type="button" variant="ghost" size="sm" onClick={() => setVisible((v) => !v)}>
-          {visible ? <EyeOff /> : <Eye />} {visible ? 'Hide' : 'Reveal'}
-        </Button>
+    <StepFrame
+      title="Secret value"
+      description="Paste the value, or let GitVault generate a strong one."
+      onSubmit={submit}
+      actions={<StepActions onBack={() => go('details')} nextDisabled={!value} />}
+    >
+      <div className="flex flex-col gap-3">
+        <FormField label="Value" htmlFor="secret-value">
+          <Textarea
+            id="secret-value"
+            autoFocus
+            value={value}
+            onChange={(e) => update({ value: e.target.value })}
+            placeholder="Paste the value or generate one"
+            className={cn(
+              'min-h-36 resize-none rounded-xl border-transparent bg-muted/60 px-4 py-3.5 font-mono text-[13px] shadow-none hover:bg-muted/90 focus-visible:bg-background dark:bg-muted/60',
+              !visible && '[-webkit-text-security:disc]',
+            )}
+            spellCheck={false}
+            autoComplete="off"
+          />
+        </FormField>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            className="rounded-full"
+            disabled={generate.isPending}
+            onClick={() =>
+              generate.mutate(GENERATE_DEFAULTS, { onSuccess: (g) => update({ value: g.value }) })
+            }
+          >
+            <Sparkles /> Generate
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="rounded-full text-muted-foreground"
+            onClick={() => setVisible((v) => !v)}
+          >
+            {visible ? <EyeOff /> : <Eye />} {visible ? 'Hide' : 'Reveal'}
+          </Button>
+        </div>
       </div>
-      <Callout tone="info" icon={<Info className="size-4 text-info" />}>
-        Values are encrypted before they leave this device. Only ciphertext reaches GitHub.
-      </Callout>
-      <WizardActions onBack={() => go('details')} nextDisabled={!value} />
-    </form>
+      <p className="flex items-center gap-2 text-[13px] text-muted-foreground">
+        <ShieldCheck className="size-4 shrink-0" />
+        Encrypted on this device. Only ciphertext reaches GitHub.
+      </p>
+    </StepFrame>
   )
 }

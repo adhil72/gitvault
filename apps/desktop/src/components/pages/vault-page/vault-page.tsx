@@ -97,7 +97,10 @@ function NoSecrets({
   const navigate = useNavigate()
   const requireUnlock = useRequireUnlock(vaultId)
   const goToAddSecret = () =>
-    void navigate({ to: '/vaults/$vaultId/secrets/new/$step', params: { vaultId, step: 'type' } })
+    void navigate({
+      to: '/vaults/$vaultId/secrets/new/$step',
+      params: { vaultId, step: 'details' },
+    })
   if (filtered) {
     return (
       <EmptyState

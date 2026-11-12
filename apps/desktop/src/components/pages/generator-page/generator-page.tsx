@@ -52,7 +52,10 @@ export function GeneratorPage() {
 
   const saveAsSecret = () => {
     useAddSecretDraft.getState().update({ value: result?.value ?? '' })
-    void navigate({ to: '/vaults/$vaultId/secrets/new/$step', params: { vaultId, step: 'type' } })
+    void navigate({
+      to: '/vaults/$vaultId/secrets/new/$step',
+      params: { vaultId, step: 'details' },
+    })
   }
 
   return (

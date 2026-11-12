@@ -56,10 +56,7 @@ export function NameStep() {
           {...register('description')}
         />
       </FormField>
-      <WizardActions
-        backLabel="Cancel"
-        onBack={() => void navigate({ to: '/vaults', search: { all: true } })}
-      />
+      <WizardActions backLabel="Cancel" onBack={() => void navigate({ to: '/vaults' })} />
     </form>
   )
 }

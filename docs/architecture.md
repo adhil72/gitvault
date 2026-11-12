@@ -542,11 +542,11 @@ apps/desktop/src/
 │  │  └─ sign-in.device.tsx                           # /sign-in/device
 │  ├─ _authed.tsx                 # guard: beforeLoad requires a GitHub session
 │  └─ _authed/
-│     ├─ _wizard.tsx              # layout route: split wizard layout (step bar + outlet)
+│     ├─ _wizard.tsx              # layout route: centered wizard layout (step bar + outlet)
 │     ├─ _wizard/
 │     │  ├─ vaults.new.$step.tsx                      # /vaults/new/$step   (name|repository|password|recovery|done)
 │     │  ├─ vaults.$vaultId.unlock.tsx                # /vaults/$vaultId/unlock
-│     │  └─ vaults.$vaultId.secrets.new.$step.tsx     # /vaults/$vaultId/secrets/new/$step (type|details|value|expiry|review|saved)
+│     │  └─ vaults.$vaultId.secrets.new.$step.tsx     # /vaults/$vaultId/secrets/new/$step (details|value|expiry|review|saved)
 │     ├─ _app.tsx                 # layout route: app shell (header + sidebar + outlet); guard: vault unlocked
 │     └─ _app/
 │        ├─ vaults.$vaultId.index.tsx                 # all secrets (search params: environment, group, q, sort)
@@ -634,7 +634,7 @@ components/pages/
 │                           secret-detail-panel.tsx  use-vault-filters.ts  index.ts
 ├─ create-vault-page/       create-vault-page.tsx  steps/ (name-step.tsx repository-step.tsx password-step.tsx recovery-step.tsx done-step.tsx)
 ├─ unlock-page/             unlock-page.tsx  index.ts
-├─ add-secret-page/         add-secret-page.tsx  steps/ (type-step.tsx details-step.tsx value-step.tsx expiry-step.tsx review-step.tsx saved-step.tsx)
+├─ add-secret-page/         add-secret-page.tsx  steps/ (details-step.tsx value-step.tsx expiry-step.tsx review-step.tsx saved-step.tsx)
 ├─ edit-secret-sheet/  secret-history-page/  import-env-dialog/  delete-secret-dialog/
 ├─ generator-page/  audit-log-page/  settings-page/ (tabs/ security-tab.tsx github-sync-tab.tsx appearance-tab.tsx …)
 ```
@@ -709,7 +709,7 @@ routes ─► components/pages ─► components/general ─► components/ui �
 | Vault · All secrets (+ switcher, empty state)                                  | `/vaults/$vaultId`                           | `VaultPage`                           |
 | Vault · Create 1–5 (Name → Repository → Master password → Recovery key → Done) | `/vaults/new/$step`                          | `CreateVaultPage`                     |
 | Vault · Unlock                                                                 | `/vaults/$vaultId/unlock`                    | `UnlockPage`                          |
-| Add secret 1–6 (Type → Details → Value → Expiry → Review → Saved)              | `/vaults/$vaultId/secrets/new/$step`         | `AddSecretPage`                       |
+| Add secret 1–5 (Details → Value → Expiry → Review → Saved)                     | `/vaults/$vaultId/secrets/new/$step`         | `AddSecretPage`                       |
 | Secret detail / Edit drawer                                                    | `/vaults/$vaultId/secrets/$secretId[/edit]`  | `VaultPage` panel / `EditSecretSheet` |
 | Version history                                                                | `/vaults/$vaultId/secrets/$secretId/history` | `SecretHistoryPage`                   |
 | Delete confirmation                                                            | `/vaults/$vaultId/secrets/$secretId/delete`  | `DeleteSecretDialog`                  |
@@ -943,7 +943,7 @@ Built screen-by-screen from Figma (route → page component → hooks → existi
 1. Sign in + Authorize device
 2. Vault shell (sidebar, list, detail, switcher, empty state)
 3. Create-vault wizard (5 pages) + Unlock
-4. Add-secret wizard (6 pages), Edit drawer, History, Import `.env`, Delete confirm
+4. Add-secret wizard (5 pages), Edit drawer, History, Import `.env`, Delete confirm
 5. Password generator, Audit log, Settings
 6. Light/dark theming, accessibility pass
 

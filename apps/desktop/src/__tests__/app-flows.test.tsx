@@ -30,18 +30,19 @@ function seedVault(unlocked: boolean) {
 }
 
 describe('opening the app', () => {
-  it('asks which vault to open instead of jumping into one', async () => {
+  it("opens the account's vault straight away", async () => {
     seedVault(false)
     await renderApp('/')
-    expect(await screen.findByRole('heading', { name: 'Your vaults' })).toBeInTheDocument()
-    expect(await screen.findByText('Personal vault')).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'Switch vault' })).toHaveTextContent(
+      'Personal vault',
+    )
   })
 
   it('signs in silently with the gh CLI account when one exists', async () => {
     seedVault(false)
     state.account = null
     await renderApp('/')
-    expect(await screen.findByRole('heading', { name: 'Your vaults' })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'Switch vault' })).toBeInTheDocument()
   })
 
   it('switches between gh accounts from the header', async () => {
@@ -52,7 +53,7 @@ describe('opening the app', () => {
     const dialog = await screen.findByRole('dialog', { name: 'Switch to hubot?' })
     expect(state.account?.login).not.toBe('hubot')
     await user.click(within(dialog).getByRole('button', { name: 'Switch account' }))
-    expect(await screen.findByRole('heading', { name: 'Your vaults' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: /^Welcome/ })).toBeInTheDocument()
     expect(state.account?.login).toBe('hubot')
   })
 

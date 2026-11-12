@@ -22,10 +22,18 @@ interface EnvironmentFieldProps {
   onChange: (value: string) => void
   /** The vault whose existing environments are offered. */
   vaultId: string
+  /** Extra classes for the trigger, to restyle it per page. */
+  className?: string
 }
 
 /** Searchable environment picker (shadcn Popover + Command) that can also create one. */
-export function EnvironmentField({ id, value, onChange, vaultId }: EnvironmentFieldProps) {
+export function EnvironmentField({
+  id,
+  value,
+  onChange,
+  vaultId,
+  className,
+}: EnvironmentFieldProps) {
   const options = useEnvironmentOptions(vaultId)
   const [open, setOpen] = useState(false)
   const [creating, setCreating] = useState(false)
@@ -66,7 +74,7 @@ export function EnvironmentField({ id, value, onChange, vaultId }: EnvironmentFi
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            className="h-10 w-full justify-between bg-inset px-3 font-normal"
+            className={cn('h-10 w-full justify-between bg-inset px-3 font-normal', className)}
           >
             <span
               className={cn('flex items-center gap-2 truncate', !value && 'text-muted-foreground')}
