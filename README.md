@@ -9,7 +9,7 @@ Sign in with GitHub, protect each vault with a master password, and use the same
 
 ## Download
 
-Windows (`.exe`) and Ubuntu (`.deb`) installers are published at https://adhil72.github.io/gitvault-website/download/. The installers also install the `gitvault` command-line tool (on `PATH`), so there is nothing else to set up. The Windows app updates itself; every release lists `SHA256SUMS` for verification.
+Windows (`.exe`) and Ubuntu (`.deb`) installers are published at https://adhil72.github.io/gitvault-website/download/. The installers also install the `gitvault` command-line tool (on `PATH`), so there is nothing else to set up. The Windows app updates itself; every release lists `SHA256SUMS` for verification. Ubuntu/Debian users can also install and update through a GPG-signed apt repository: see [docs/apt-repository.md](docs/apt-repository.md). Signing key fingerprint: `2F22 86FD 69D5 C056 80FC 12BF BCCE 9E57 C812 62F0`.
 
 ## What works
 

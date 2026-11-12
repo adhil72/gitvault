@@ -188,18 +188,38 @@ jobs:
           # Version-free copies let the website link to releases/latest/download/<name> forever.
           cp "$exe" GitVault-setup.exe
           cp ./*.deb GitVault.deb
+      # Signed apt repository (see docs/apt-repository.md). Optional: skipped until the key is configured.
+      - name: Build the signed apt repository
+        id: apt
+        env:
+          APT_GPG_PRIVATE_KEY: ${{ secrets.APT_GPG_PRIVATE_KEY }}
+          APT_GPG_PASSPHRASE: ${{ secrets.APT_GPG_PASSPHRASE }}
+        run: |
+          if [ -z "$APT_GPG_PRIVATE_KEY" ]; then
+            echo "::warning::APT_GPG_PRIVATE_KEY is not set; the apt repository was not built"
+            exit 0
+          fi
+          printf '%s' "$APT_GPG_PRIVATE_KEY" | gpg --batch --import
+          scripts/build-apt-repo.sh dist/GitVault.deb apt-out
+          echo "built=true" >> "$GITHUB_OUTPUT"
       - name: Create the release in the public repository
         env:
           GH_TOKEN: ${{ secrets.WEBSITE_TOKEN }}
+          APT_BUILT: ${{ steps.apt.outputs.built }}
         run: |
           if [ -z "$GH_TOKEN" ]; then
             echo "::warning::WEBSITE_TOKEN is not set; nothing was sent to $PUBLIC_REPO"
             exit 0
           fi
-          cd dist
+          files=(dist/*.exe dist/*.exe.sig dist/*.deb dist/*.deb.sig dist/latest.json dist/SHA256SUMS)
+          if [ "$APT_BUILT" = "true" ]; then
+            # GitVault.deb is already uploaded above; the rest is the index, its signatures and the public key.
+            files+=(apt-out/Packages apt-out/Packages.gz apt-out/Release apt-out/InRelease apt-out/Release.gpg
+                    apt-out/gitvault-archive-keyring.gpg apt-out/gitvault-archive-keyring.asc)
+          fi
           gh release create "$TAG" --repo "$PUBLIC_REPO" --latest --title "GitVault $TAG" \
-            --notes "Verify downloads with \`sha256sum -c SHA256SUMS --ignore-missing\`." \
-            ./*.exe ./*.exe.sig ./*.deb ./*.deb.sig latest.json SHA256SUMS
+            --notes "Verify downloads with \`sha256sum -c SHA256SUMS --ignore-missing\`. Ubuntu users can install and update through apt: see the download page." \
+            "${files[@]}"
       - name: Publish the release in this repository too
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
