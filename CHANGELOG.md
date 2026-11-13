@@ -5,6 +5,23 @@ All notable changes to GitVault are listed here, newest first. The format follow
 [Semantic Versioning](https://semver.org/). The same history is published at
 https://adhil72.github.io/gitvault-website/changelog/.
 
+## [1.1.0] - 2026-11-13
+
+### Added
+
+- **`gv` alias.** `gv` is a short name for `gitvault`, installed with the `.deb`, the Windows
+  installer and the install script.
+- **One-line install.** `scripts/install.sh` installs GitVault on a server (apt on Debian/Ubuntu,
+  cargo elsewhere).
+- **Guided `gv trust`.** Run it inside a folder and it asks which vault and environments, asks for
+  the master password when needed, and trusts the folder.
+
+### Changed
+
+- **Sign-in uses the GitHub CLI.** `gv auth login` reuses `gh auth login` and does nothing when you
+  are already signed in; commands that need GitHub sign in through `gh` by themselves. The browser
+  device flow is now `gv auth login --device`.
+
 ## [1.0.0] - 2026-11-12
 
 ### Changed

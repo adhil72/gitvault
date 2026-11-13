@@ -1,6 +1,6 @@
 {
   "name": "@adhil28/gitvault",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Load your GitVault secrets into process.env at startup. No .env files in the project.",
   "license": "MIT",
   "keywords": [
