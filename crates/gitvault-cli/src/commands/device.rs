@@ -29,22 +29,34 @@ pub fn run(app: &App, cmd: &DeviceCmd) -> Result<()> {
 /// needs the master password, so a trusted device cannot mint more trust by itself.
 pub fn unlocked_vault(app: &App, password: &PasswordSource, allow_trusted: bool) -> Result<String> {
     let vault_id = app.vault_id()?;
-    if !app.services.vaults.info(&vault_id)?.unlocked {
-        if allow_trusted {
-            match app.unlock_trusted_here(&vault_id, None, None) {
-                Ok(_) => return Ok(vault_id),
-                Err(CoreError::VaultLocked) => {}
-                Err(other) => return Err(other.into()),
-            }
-        }
-        let password = input::password(app, "Master password: ", password.password_stdin)?;
-        app.services.vaults.unlock(&UnlockInput {
-            vault_id: vault_id.clone(),
-            password: Some(password),
-            recovery_key: None,
-        })?;
-    }
+    unlock_vault(app, &vault_id, password, allow_trusted)?;
     Ok(vault_id)
+}
+
+/// [`unlocked_vault`] for a vault that was chosen explicitly (e.g. from a menu).
+pub fn unlock_vault(
+    app: &App,
+    vault_id: &str,
+    password: &PasswordSource,
+    allow_trusted: bool,
+) -> Result<()> {
+    if app.services.vaults.info(vault_id)?.unlocked {
+        return Ok(());
+    }
+    if allow_trusted {
+        match app.unlock_trusted_here(vault_id, None, None) {
+            Ok(()) => return Ok(()),
+            Err(CoreError::VaultLocked) => {}
+            Err(other) => return Err(other.into()),
+        }
+    }
+    let password = input::password(app, "Master password: ", password.password_stdin)?;
+    app.services.vaults.unlock(&UnlockInput {
+        vault_id: vault_id.to_owned(),
+        password: Some(password),
+        recovery_key: None,
+    })?;
+    Ok(())
 }
 
 fn trust(app: &App, name: &str, export: bool, password: &PasswordSource) -> Result<()> {

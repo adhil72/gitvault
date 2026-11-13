@@ -7,6 +7,16 @@ Sign in with GitHub, protect each vault with a master password, and use the same
 - **Vault file format:** [docs/vault-format.md](docs/vault-format.md)
 - **CLI reference (generated):** [docs/cli.md](docs/cli.md) · for AI tools: [llms.txt](llms.txt), [AGENTS.md](AGENTS.md)
 
+## Install
+
+On a server or desktop (Debian/Ubuntu via the signed apt repo, other Linux via cargo):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/adhil72/gitvault/main/scripts/install.sh | sh
+```
+
+This installs `gitvault` and its short alias **`gv`**. Sign in once with the GitHub CLI (`gh auth login`); GitVault reuses it, and does nothing if you are already signed in.
+
 ## Download
 
 Windows (`.exe`) and Ubuntu (`.deb`) installers are published at https://adhil72.github.io/gitvault-website/download/. The installers also install the `gitvault` command-line tool (on `PATH`), so there is nothing else to set up. The Windows app updates itself; every release lists `SHA256SUMS` for verification. Ubuntu/Debian users can also install and update through a GPG-signed apt repository: see [docs/apt-repository.md](docs/apt-repository.md). Signing key fingerprint: `2F22 86FD 69D5 C056 80FC 12BF BCCE 9E57 C812 62F0`.
@@ -62,7 +72,7 @@ cargo run -p gitvault-cli -- --help
 
 ### Signing in to GitHub
 
-- **GitHub CLI** (no setup): run `gh auth login` once, then press "Continue with GitHub CLI" in the app or run `gitvault auth login --from-gh`.
+- **GitHub CLI** (no setup): run `gh auth login` once, then press "Continue with GitHub CLI" in the app or run `gv auth login` (it uses `gh` and does nothing if you are signed in).
 - **Personal access token**: create a token with the `repo` scope, then
   `echo ghp_… | gitvault auth login --with-token` (or `gitvault auth login --from-gh` to reuse the GitHub CLI),
   or paste it under "sign in with a personal access token" in the app.
@@ -92,12 +102,13 @@ For Vite projects, add the plugin instead (`import { gitvault } from '@adhil28/g
 ### CLI in 60 seconds
 
 ```bash
-gitvault auth login --from-gh
-gitvault vault create --name Personal           # prompts for a master password, prints the recovery key
-echo -n "sk_live_…" | gitvault secret add STRIPE_KEY --environment production --value-stdin
-gitvault secret list
-gitvault run --environment production -- ./deploy.sh      # secrets injected, never printed
-gitvault sync now
+gh auth login                                   # once; gv signs in through it by itself
+gv vault create --name Personal                 # prompts for a master password, prints the recovery key
+echo -n "sk_live_…" | gv secret add STRIPE_KEY --environment production --value-stdin
+gv secret list
+cd ~/projects/shop && gv trust                  # asks which vault and environments, then trusts the folder
+gv run --environment production -- ./deploy.sh  # secrets injected, never printed
+gv sync now
 ```
 
 Data lives in `~/.local/share/gitvault` (override with `GITVAULT_HOME`). Unlocked keys are kept for the idle timeout

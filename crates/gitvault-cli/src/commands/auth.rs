@@ -3,7 +3,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use gitvault_core::dto::{AccountDto, LoginPollDto};
 
 use crate::{
@@ -30,7 +30,7 @@ fn status(app: &App) -> Result<()> {
     let account = app.services.auth.status();
     app.emit(&account, || match &account {
         Some(a) => format!("Signed in as {}", a.login),
-        None => "Not signed in. Run `gitvault auth login`.".into(),
+        None => "Not signed in. Run `gv auth login`.".into(),
     })
 }
 
@@ -48,16 +48,33 @@ fn accounts(app: &App) -> Result<()> {
 }
 
 fn login(app: &App, args: &LoginArgs) -> Result<()> {
-    let account = if let Some(user) = &args.gh_user {
-        app.services.auth.login_with_gh_account(user)?
-    } else if args.with_token {
-        app.services.auth.login_with_token(&input::stdin_token()?)?
-    } else if args.from_gh {
-        app.services.auth.login_with_gh_cli()?
-    } else {
-        device_flow(app)?
-    };
-    app.emit(&account, || format!("Signed in as {}", account.login))
+    if let Some(user) = &args.gh_user {
+        return signed_in(app, &app.services.auth.login_with_gh_account(user)?);
+    }
+    if args.with_token {
+        return signed_in(
+            app,
+            &app.services.auth.login_with_token(&input::stdin_token()?)?,
+        );
+    }
+    if args.device {
+        return signed_in(app, &device_flow(app)?);
+    }
+    if let Some(account) = app.services.auth.status() {
+        return app.emit(&account, || {
+            format!("Already signed in as {}. Nothing to do.", account.login)
+        });
+    }
+    let account = app
+        .services
+        .auth
+        .login_with_gh_cli()
+        .context("sign in with the GitHub CLI first: run `gh auth login`, then try again")?;
+    signed_in(app, &account)
+}
+
+fn signed_in(app: &App, account: &AccountDto) -> Result<()> {
+    app.emit(account, || format!("Signed in as {}", account.login))
 }
 
 fn device_flow(app: &App) -> Result<AccountDto> {

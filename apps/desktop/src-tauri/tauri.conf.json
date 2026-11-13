@@ -38,7 +38,9 @@
     ],
     "linux": {
       "deb": {
-        "depends": ["git", "gh"]
+        "depends": ["git", "gh"],
+        "postInstallScript": "installer/postinst.sh",
+        "preRemoveScript": "installer/prerm.sh"
       },
       "rpm": {
         "depends": ["git", "gh"]

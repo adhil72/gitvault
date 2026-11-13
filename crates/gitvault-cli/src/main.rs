@@ -8,6 +8,7 @@ mod cli;
 mod commands;
 mod input;
 mod output;
+mod prompt;
 mod time;
 
 use std::process::ExitCode;
@@ -37,7 +38,7 @@ fn execute(cli: Cli) -> anyhow::Result<u8> {
     if let Ok(token) = std::env::var(SESSION_ENV) {
         services.vaults.import_session(&token)?;
     }
-    sign_in_from_env(&services)?;
+    sign_in_automatically(&services, needs_github(&cli.command))?;
     let app = App::new(services, cli.json, cli.non_interactive, cli.vault);
     if let Command::Run(args) = &cli.command {
         return run::run(&app, args);
@@ -46,14 +47,37 @@ fn execute(cli: Cli) -> anyhow::Result<u8> {
     Ok(0)
 }
 
-/// Servers have no `gh` or browser: `GITVAULT_TOKEN` (a read-only GitHub token) signs them in.
-fn sign_in_from_env(services: &gitvault_core::services::Services) -> anyhow::Result<()> {
-    if services.auth.status().is_none() {
-        if let Ok(token) = std::env::var(TOKEN_ENV) {
-            services.auth.login_with_token(&token)?;
-        }
+/// Signs in without a command: `GITVAULT_TOKEN` (servers have no `gh` or browser), otherwise the
+/// GitHub CLI when this command talks to GitHub. Being signed in already means nothing to do.
+fn sign_in_automatically(
+    services: &gitvault_core::services::Services,
+    needs_github: bool,
+) -> anyhow::Result<()> {
+    if services.auth.status().is_some() {
+        return Ok(());
+    }
+    if let Ok(token) = std::env::var(TOKEN_ENV) {
+        services.auth.login_with_token(&token)?;
+    } else if needs_github && services.auth.login_with_gh_cli().is_err() {
+        eprintln!("note: not signed in to GitHub. Run `gh auth login` to sync vaults.");
     }
     Ok(())
+}
+
+/// Commands that read or write GitHub, so they sign in through `gh` by themselves.
+fn needs_github(command: &Command) -> bool {
+    match command {
+        Command::Sync { .. } | Command::Collaborator { .. } => true,
+        Command::Vault { cmd } => match cmd {
+            cli::VaultCmd::Create(args) => !args.local_only,
+            cli::VaultCmd::List { remote } => *remote,
+            cli::VaultCmd::Connect { .. } | cli::VaultCmd::Remote | cli::VaultCmd::Republish => {
+                true
+            }
+            _ => false,
+        },
+        _ => false,
+    }
 }
 
 fn dispatch(app: &App, command: &Command) -> anyhow::Result<()> {
@@ -65,7 +89,7 @@ fn dispatch(app: &App, command: &Command) -> anyhow::Result<()> {
         Command::Lock => vault::lock(app),
         Command::Device { cmd } => device::run(app, cmd),
         Command::Collaborator { cmd } => collaborator::run(app, cmd),
-        Command::Trust { cmd } => trust::run(app, cmd),
+        Command::Trust(args) => trust::run(app, args),
         Command::Secret { cmd } => secret::run(app, cmd),
         Command::Env { cmd } => match cmd {
             cli::EnvCmd::List => organize::list(app, Facet::Environment),

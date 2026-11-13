@@ -448,7 +448,7 @@ gitvault commands | schema | completions <shell> | version
 | Audit log                    | `ListAuditEvents`                          | `audit_list`                 | `audit list`                           |
 | Settings                     | `Get/UpdateSettings`                       | `settings_get/set`           | `settings get/set`                     |
 
-`gitvault trust add|list|remove` (folder trust) is **cli_only**: it is judged from the current directory of the process that asks to unlock, which the desktop app does not have. A device restricted to folders makes the desktop app ask for the password.
+`gitvault trust` (guided: asks vault and environments) and `trust add|list|remove` (folder trust) are **cli_only**: it is judged from the current directory of the process that asks to unlock, which the desktop app does not have. A device restricted to folders makes the desktop app ask for the password.
 
 **Parity enforcement:** a test iterates the `Services` use-case registry and asserts each has (a) a Tauri command and (b) a CLI command, or is explicitly listed as `ui_only` / `cli_only` with a reason. CI fails on drift.
 

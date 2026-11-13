@@ -37,6 +37,11 @@ impl App {
         }
     }
 
+    /// The vault named by `--vault` / `GITVAULT_VAULT`, if any (menus skip asking then).
+    pub fn vault_flag(&self) -> Option<&str> {
+        self.vault_flag.as_deref()
+    }
+
     /// The vault to operate on: `--vault`, `GITVAULT_VAULT`, or the current default.
     pub fn vault_id(&self) -> Result<String> {
         if let Some(id) = &self.vault_flag {

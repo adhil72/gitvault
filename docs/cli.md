@@ -20,10 +20,11 @@ Sign in to GitHub
 
 #### `gitvault auth login`
 
-Sign in. Without flags, uses the GitHub device flow
+Sign in with the GitHub CLI (`gh auth login`). Does nothing when already signed in
 
 - `--with-token`: Read a personal access token from stdin
-- `--from-gh`: Reuse the token of the GitHub CLI (`gh auth token`)
+- `--device`: Use the browser device flow instead of the GitHub CLI (needs an OAuth client id)
+- `--from-gh`: Kept for old scripts: the GitHub CLI is already the default
 - `--gh-user`: Sign in as this account of the GitHub CLI (see `gitvault auth accounts`)
 
 #### `gitvault auth logout`
@@ -80,6 +81,14 @@ Remove the local copy (GitHub is untouched)
 
 - `<id>` (required)
 
+#### `gitvault vault remote`
+
+Check whether the vault's GitHub repository still exists
+
+#### `gitvault vault republish`
+
+Create a new GitHub repository for a vault whose repository was deleted
+
 #### `gitvault vault password`
 
 Change the master password
@@ -106,7 +115,11 @@ Lock a vault and wipe its key
 
 ### `gitvault trust`
 
-Trust folders: this device unlocks by itself only inside them (and their subfolders)
+Trust a folder: run `gv trust` inside it and answer the prompts
+
+- `<path>`: The folder (default: the current one)
+- `--env`: Only for these environments, e.g. --env development. Default: ask (or all of them)
+- `--password-stdin`: Read the master password from stdin instead of prompting
 
 #### `gitvault trust add`
 
@@ -407,3 +420,4 @@ Print shell completions
 ### `gitvault mcp`
 
 Start a Model Context Protocol server on stdio
+

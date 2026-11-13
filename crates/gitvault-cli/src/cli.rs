@@ -11,10 +11,12 @@ use clap_complete::Shell;
 /// GitVault: encrypted secrets stored in your own private GitHub repository.
 ///
 /// Examples:
-///   gitvault auth login --from-gh
-///   gitvault vault create --name Personal
-///   gitvault secret add STRIPE_KEY --environment production --value-stdin
-///   gitvault run --environment production -- ./deploy.sh
+///   gv vault create --name Personal
+///   gv secret add STRIPE_KEY --environment production --value-stdin
+///   gv trust                       (in a project folder: pick vault + environment)
+///   gv run --environment production -- ./deploy.sh
+///
+/// `gv` is a short alias of `gitvault`. GitHub sign-in uses the GitHub CLI (`gh auth login`).
 #[derive(Debug, Parser)]
 #[command(name = "gitvault", version, propagate_version = true)]
 pub struct Cli {
@@ -52,11 +54,8 @@ pub enum Command {
     Unlock(UnlockArgs),
     /// Lock a vault and wipe its key.
     Lock,
-    /// Trust folders: this device unlocks by itself only inside them (and their subfolders).
-    Trust {
-        #[command(subcommand)]
-        cmd: TrustCmd,
-    },
+    /// Trust a folder: run `gv trust` inside it and answer the prompts.
+    Trust(TrustArgs),
     /// Trust devices so they unlock without the master password.
     Device {
         #[command(subcommand)]
@@ -147,7 +146,7 @@ pub enum ListOnly {
 
 #[derive(Debug, Subcommand)]
 pub enum AuthCmd {
-    /// Sign in. Without flags, uses the GitHub device flow.
+    /// Sign in with the GitHub CLI (`gh auth login`). Does nothing when already signed in.
     Login(LoginArgs),
     /// Forget the GitHub token.
     Logout,
@@ -162,8 +161,11 @@ pub struct LoginArgs {
     /// Read a personal access token from stdin.
     #[arg(long)]
     pub with_token: bool,
-    /// Reuse the token of the GitHub CLI (`gh auth token`).
-    #[arg(long)]
+    /// Use the browser device flow instead of the GitHub CLI (needs an OAuth client id).
+    #[arg(long, conflicts_with_all = ["with_token", "gh_user"])]
+    pub device: bool,
+    /// Kept for old scripts: the GitHub CLI is already the default.
+    #[arg(long, hide = true)]
     pub from_gh: bool,
     /// Sign in as this account of the GitHub CLI (see `gitvault auth accounts`).
     #[arg(long, value_name = "LOGIN", conflicts_with_all = ["with_token", "from_gh"])]
@@ -209,6 +211,21 @@ pub struct CreateVaultArgs {
     /// Do not create a GitHub repository.
     #[arg(long)]
     pub local_only: bool,
+    #[command(flatten)]
+    pub password: PasswordSource,
+}
+
+/// `gv trust` alone asks which vault and environments; the subcommands are the scriptable form.
+#[derive(Debug, Args)]
+#[command(args_conflicts_with_subcommands = true)]
+pub struct TrustArgs {
+    #[command(subcommand)]
+    pub cmd: Option<TrustCmd>,
+    /// The folder (default: the current one).
+    pub path: Option<PathBuf>,
+    /// Only for these environments, e.g. --env development. Default: ask (or all of them).
+    #[arg(long = "env")]
+    pub environments: Vec<String>,
     #[command(flatten)]
     pub password: PasswordSource,
 }

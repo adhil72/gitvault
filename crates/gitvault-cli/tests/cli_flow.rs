@@ -432,6 +432,18 @@ fn folder_trust_limits_silent_unlock_to_a_folder_and_environment() {
         Some(4)
     );
 
+    // Bare `trust <folder>` without a terminal trusts the folder for every environment.
+    let all = work.path().join("shop-other");
+    let bare = run(
+        home.path(),
+        &["trust", all.to_str().unwrap(), "--password-stdin"],
+        &format!("{PASSWORD}\n"),
+    );
+    assert!(bare.status.success());
+    run(home.path(), &["lock"], "");
+    assert!(export_in(home.path(), "production", &all).status.success());
+    run(home.path(), &["lock"], "");
+
     // Removing the folder closes it again, and the device does not fall back to "anywhere".
     assert!(run(
         home.path(),
