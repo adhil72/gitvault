@@ -1,0 +1,11 @@
+{
+  "properties": [
+    { "name": "gitvault.enabled", "type": "java.lang.Boolean", "defaultValue": true, "description": "Load GitVault secrets at startup." },
+    { "name": "gitvault.environment", "type": "java.lang.String", "description": "Vault environment to load, e.g. production. Defaults to GITVAULT_ENV, then the single active Spring profile." },
+    { "name": "gitvault.vault", "type": "java.lang.String", "description": "Vault id. Defaults to GITVAULT_VAULT, then the vault chosen with 'gitvault vault use'." },
+    { "name": "gitvault.bin", "type": "java.lang.String", "description": "Path of the gitvault binary. Defaults to GITVAULT_BIN, then 'gitvault' on PATH." },
+    { "name": "gitvault.override", "type": "java.lang.Boolean", "defaultValue": false, "description": "Let vault values win over OS environment variables." },
+    { "name": "gitvault.fail-fast", "type": "java.lang.Boolean", "defaultValue": true, "description": "Fail the startup when the secrets cannot be loaded (locked vault, CLI missing, ...)." },
+    { "name": "gitvault.timeout-seconds", "type": "java.lang.Integer", "defaultValue": 60, "description": "How long to wait for the gitvault CLI." }
+  ]
+}

@@ -38,6 +38,62 @@ Windows (`.exe`) and Ubuntu (`.deb`) installers are published at https://adhil72
 
 Both front doors call the **same services** in `crates/gitvault-core`.
 
+## How it's encrypted
+
+Your vault is a private GitHub repository that contains **only ciphertext**. GitHub, and anyone who gets read access to the repo, never sees a secret value, name or note.
+
+| Step                  | What GitVault uses                                                                                                   |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Master password → key | **Argon2id** (64 MiB memory, 3 iterations, random 16-byte salt) derives a key-encryption key                         |
+| Vault key             | 32 random bytes, generated once per vault, stored only **wrapped** (encrypted) by your password and recovery key     |
+| Each secret           | **AES-256-GCM** with a fresh 96-bit nonce on every write, one file per secret                                        |
+| Recovery key          | 160 random bits shown once, run through HKDF-SHA256, so a forgotten password does not lock you out                   |
+| Tamper protection     | The secret's vault id and file id are authenticated data, so a file copied to another vault or renamed fails to open |
+
+What this means in practice:
+
+- Changing your master password re-wraps the vault key; no secret has to be re-encrypted.
+- Secret names, tags and notes are inside the ciphertext. The repo reveals only how many secrets exist and when they changed.
+- Commit messages contain ids only, never names.
+- The vault name and description are stored in plaintext in the header, so don't put secrets in them.
+- Unlocked keys are kept only for the idle timeout (default 5 minutes), and `run`/`inject` never print secret values.
+- There is no GitVault server. Your secrets are only ever sent, as ciphertext, to your own GitHub repository.
+
+The full byte-level specification, including the file layout and key hierarchy, is in [docs/vault-format.md](docs/vault-format.md). Known limits are listed under [Security notes](#security-notes).
+
+## How it compares
+
+GitVault is built for **individual developers and very small teams** who want encrypted secrets they fully own, without running or paying for a server. It is not a replacement for a team platform with roles and audit trails.
+
+|                           | `.env` files |       GitVault       |    1Password CLI    |      Doppler      |         Infisical          |           SOPS            |         git-crypt         |
+| ------------------------- | :----------: | :------------------: | :-----------------: | :---------------: | :------------------------: | :-----------------------: | :-----------------------: |
+| Encrypted at rest         |      No      |         Yes          |         Yes         |        Yes        |            Yes             |            Yes            |            Yes            |
+| Where secrets live        |  Your disk   | Your own GitHub repo | 1Password's servers | Doppler's servers | Their cloud or your server |  Files in your git repo   |  Files in your git repo   |
+| Account or server to run  |     None     |     GitHub only      |  1Password account  |  Doppler account  |   Account, or self-host    | None (needs a key source) | None (needs GPG or a key) |
+| Open source               |      –       |         Yes          |         No          |        No         |            Yes             |            Yes            |            Yes            |
+| Desktop app               |      –       |         Yes          |         Yes         |   Web dashboard   |       Web dashboard        |            No             |            No             |
+| CLI `run` / inject        |      –       |         Yes          |         Yes         |        Yes        |            Yes             |            Yes            |            No             |
+| Secret names hidden       |      No      |         Yes          |         Yes         |        Yes        |            Yes             |     Keys are visible      |    File names visible     |
+| Version history           |      No      |    Yes (via git)     |         Yes         |        Yes        |            Yes             |       Yes (via git)       |       Yes (via git)       |
+| MCP server for AI tools   |      –       |         Yes          |    Not built in     |   Not built in    |        Not built in        |            No             |            No             |
+| Per-user roles and access |      –       |          No          |         Yes         |        Yes        |            Yes             |      Via key access       |      Via key access       |
+| Team audit and rotation   |      –       |   Basic audit log    |         Yes         |        Yes        |            Yes             |            No             |            No             |
+| Integrations (CI, cloud)  |      –       |    CLI and `.env`    |        Many         |       Many        |            Many            |        KMS and CI         |            No             |
+
+### When to choose something else
+
+- **You need per-person permissions, SSO or compliance reports:** use Doppler, Infisical or 1Password.
+- **You want secrets committed next to your infrastructure code (GitOps):** SOPS fits that workflow better.
+- **You only need to protect a few files in an existing repo:** git-crypt is simpler.
+
+### When GitVault fits
+
+- You want to own your secrets without running a service or paying per seat.
+- You work solo or share a vault with one or two people you trust with the master password.
+- You want the same vault from a desktop app, the terminal and AI tools, with secrets never printed.
+
+Competitor features change; check each project's current documentation before deciding.
+
 ## Repository layout
 
 ```
