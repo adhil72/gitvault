@@ -1,19 +1,16 @@
 name: Release
 
 on:
-  # One push releases: when the pushed commit carries a version that has no tag yet,
-  # the `prepare` job tags it and the rest builds and publishes that tag.
   push:
     branches: [main]
   workflow_dispatch:
     inputs:
       tag:
-        description: Existing tag to build and release (e.g. v0.1.0)
-        required: true
+        description: Existing tag to build and release (e.g. v2.0.0)
+        required: false
 
 permissions:
   contents: write
-  packages: write
 
 jobs:
   prepare:
@@ -27,9 +24,9 @@ jobs:
         env:
           INPUT_TAG: ${{ inputs.tag }}
         run: |
-          tag="${INPUT_TAG:-v$(jq -r .version apps/desktop/src-tauri/tauri.conf.json)}"
+          version=$(grep '^version = ' Cargo.toml | head -n1 | cut -d'"' -f2)
+          tag="${INPUT_TAG:-v$version}"
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
-          # A re-run of an existing tag is explicit (workflow_dispatch); a push only releases new versions.
           if [ -z "$INPUT_TAG" ] && git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null; then
             echo "$tag already released; nothing to do"
             echo "release=false" >> "$GITHUB_OUTPUT"
@@ -41,233 +38,81 @@ jobs:
             git push origin "refs/tags/$tag"
           fi
 
-  # Create the release once (as a draft while assets upload) so the parallel platform builds only add to it.
-  create-release:
+  build:
     needs: prepare
     if: needs.prepare.outputs.release == 'true'
-    runs-on: ubuntu-latest
-    env:
-      TAG: ${{ needs.prepare.outputs.tag }}
-    outputs:
-      release_id: ${{ steps.create.outputs.release_id }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ env.TAG }}
-      # The updater compares this version with the running app, so it must match the tag.
-      - name: Check the tag matches the app version
-        run: |
-          version=$(jq -r .version apps/desktop/src-tauri/tauri.conf.json)
-          if [ "v$version" != "$TAG" ]; then
-            echo "::error::Tag $TAG does not match tauri.conf.json version $version"
-            exit 1
-          fi
-      - id: create
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Created through the API so the id comes straight back (listing releases right
-          # after creating one can miss it).
-          id=$(gh api --method POST "repos/$GITHUB_REPOSITORY/releases" \
-            -f tag_name="$TAG" -f name="GitVault $TAG" \
-            -f body="See the assets below to download GitVault for your platform." \
-            -F draft=true --jq .id)
-          test -n "$id"
-          echo "release_id=$id" >> "$GITHUB_OUTPUT"
-
-  release:
-    needs: [prepare, create-release]
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-22.04 # oldest LTS keeps the glibc requirement low
-            bundles: deb
+          - os: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            ext: tar.gz
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            ext: tar.gz
           - os: windows-latest
-            bundles: nsis
+            target: x86_64-pc-windows-msvc
+            ext: zip
     runs-on: ${{ matrix.os }}
-    env:
-      TAG: ${{ needs.prepare.outputs.tag }}
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ env.TAG }}
-      - name: Install Tauri system libraries (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libsoup-3.0-dev librsvg2-dev libayatana-appindicator3-dev patchelf
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+          ref: ${{ needs.prepare.outputs.tag }}
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
       - uses: Swatinem/rust-cache@v2
-      # Optional: signs the Windows installers when a certificate is configured.
-      # Without the secrets the build still works but SmartScreen warns users.
-      - name: Import Windows code-signing certificate
-        id: winsign
+      - run: cargo build --release --locked --target ${{ matrix.target }}
+      - name: Package archive (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          mkdir -p dist
+          cp "target/${{ matrix.target }}/release/gitvault" dist/gitvault
+          tar -C dist -czf "gitvault-${{ matrix.target }}.tar.gz" gitvault
+      - name: Package archive (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
-        env:
-          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
-          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
         run: |
-          if (-not $env:WINDOWS_CERTIFICATE) {
-            Write-Host "::warning::WINDOWS_CERTIFICATE is not set; Windows installers will be unsigned"
-            exit 0
-          }
-          $pfx = Join-Path $env:RUNNER_TEMP 'codesign.pfx'
-          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE))
-          $password = ConvertTo-SecureString $env:WINDOWS_CERTIFICATE_PASSWORD -AsPlainText -Force
-          $cert = Import-PfxCertificate -FilePath $pfx -CertStoreLocation Cert:\CurrentUser\My -Password $password
-          Remove-Item $pfx
-          $config = Join-Path $env:RUNNER_TEMP 'signing.json'
-          @{ bundle = @{ windows = @{
-            certificateThumbprint = $cert.Thumbprint
-            digestAlgorithm = 'sha256'
-            timestampUrl = 'http://timestamp.digicert.com'
-          } } } | ConvertTo-Json -Depth 5 | Set-Content $config
-          "args=--config $config" >> $env:GITHUB_OUTPUT
-      # The installers carry the `gitvault` CLI as a sidecar, so installing the app installs the CLI.
-      - name: Build the CLI sidecar
-        run: node scripts/prepare-sidecar.mjs
-      - uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Signs the update artifacts (.sig); the app verifies them with the public key in tauri.conf.json.
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Copy-Item "target/${{ matrix.target }}/release/gitvault.exe" dist/gitvault.exe
+          Compress-Archive -Path dist/gitvault.exe -DestinationPath "gitvault-${{ matrix.target }}.zip"
+      - uses: actions/upload-artifact@v4
         with:
-          projectPath: apps/desktop
-          releaseId: ${{ needs.create-release.outputs.release_id }}
-          # latest.json is built in the publish job so its URLs point at the public releases repo.
-          includeUpdaterJson: false
-          args: --bundles ${{ matrix.bundles }} --config src-tauri/tauri.bundle.conf.json ${{ steps.winsign.outputs.args }}
+          name: bin-${{ matrix.target }}
+          path: gitvault-${{ matrix.target }}.${{ matrix.ext }}
 
-  # The source repository is private, so releases are published to the public
-  # website repository, which also hosts the site. It is published immediately,
-  # which also switches on the update feed (latest.json).
   publish:
-    needs: [prepare, create-release, release]
+    needs: [prepare, build]
     runs-on: ubuntu-latest
     env:
       TAG: ${{ needs.prepare.outputs.tag }}
       PUBLIC_REPO: adhil72/gitvault-website
     steps:
-      # Needed for scripts/build-apt-repo.sh; this job otherwise only handles release assets.
-      - uses: actions/checkout@v4
-      - name: Download the built assets
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - name: Generate SHA256SUMS
+        run: |
+          cd artifacts
+          sha256sum -- * > SHA256SUMS
+          cat SHA256SUMS
+      - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_ID: ${{ needs.create-release.outputs.release_id }}
         run: |
-          mkdir dist
-          gh api "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets" --paginate \
-            --jq '.[] | "\(.id) \(.name)"' | while read -r id name; do
-            gh api -H "Accept: application/octet-stream" "repos/$GITHUB_REPOSITORY/releases/assets/$id" > "dist/$name"
-          done
-          ls -l dist
-      - name: Write checksums, stable download names and the update feed
-        run: |
-          cd dist
-          version="${TAG#v}"
-          base="https://github.com/$PUBLIC_REPO/releases/download/$TAG"
-          exe=$(basename "$(ls ./*-setup.exe | head -n1)")
-          deb=$(basename "$(ls ./*.deb | head -n1)")
-          jq -n --arg version "$version" --arg date "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-            --arg exe_url "$base/$exe" --arg exe_sig "$(cat "$exe.sig")" \
-            --arg deb_url "$base/$deb" --arg deb_sig "$(cat "$deb.sig")" \
-            '{version: $version, pub_date: $date, notes: "",
-              platforms: {
-                "windows-x86_64": {signature: $exe_sig, url: $exe_url},
-                "linux-x86_64-deb": {signature: $deb_sig, url: $deb_url}
-              }}' > latest.json
-          sha256sum -- *.exe *.deb > SHA256SUMS
-          cat SHA256SUMS
-          # Version-free copies let the website link to releases/latest/download/<name> forever.
-          cp "$exe" GitVault-setup.exe
-          cp ./*.deb GitVault.deb
-      # Signed apt repository (see docs/apt-repository.md). Optional: skipped until the key is configured.
-      - name: Build the signed apt repository
-        id: apt
-        env:
-          APT_GPG_PRIVATE_KEY: ${{ secrets.APT_GPG_PRIVATE_KEY }}
-          APT_GPG_PASSPHRASE: ${{ secrets.APT_GPG_PASSPHRASE }}
-        run: |
-          if [ -z "$APT_GPG_PRIVATE_KEY" ]; then
-            echo "::warning::APT_GPG_PRIVATE_KEY is not set; the apt repository was not built"
-            exit 0
-          fi
-          printf '%s' "$APT_GPG_PRIVATE_KEY" | gpg --batch --import
-          scripts/build-apt-repo.sh dist/GitVault.deb apt-out
-          echo "built=true" >> "$GITHUB_OUTPUT"
-      - name: Create the release in the public repository
+          gh release create "$TAG" --title "GitVault $TAG" \
+            --notes "GitVault $TAG — Pure CLI, Zero .env, Powered by git and gh. Verify with \`sha256sum -c SHA256SUMS --ignore-missing\`." \
+            artifacts/*
+      - name: Mirror release to public website repo
         env:
           GH_TOKEN: ${{ secrets.WEBSITE_TOKEN }}
-          APT_BUILT: ${{ steps.apt.outputs.built }}
         run: |
           if [ -z "$GH_TOKEN" ]; then
-            echo "::warning::WEBSITE_TOKEN is not set; nothing was sent to $PUBLIC_REPO"
+            echo "::warning::WEBSITE_TOKEN is not set; skipping mirror to $PUBLIC_REPO"
             exit 0
-          fi
-          files=(dist/*.exe dist/*.exe.sig dist/*.deb dist/*.deb.sig dist/latest.json dist/SHA256SUMS)
-          if [ "$APT_BUILT" = "true" ]; then
-            # GitVault.deb is already uploaded above; the rest is the index, its signatures and the public key.
-            files+=(apt-out/Packages apt-out/Packages.gz apt-out/Release apt-out/InRelease apt-out/Release.gpg
-                    apt-out/gitvault-archive-keyring.gpg apt-out/gitvault-archive-keyring.asc)
           fi
           gh release create "$TAG" --repo "$PUBLIC_REPO" --latest --title "GitVault $TAG" \
-            --notes "Verify downloads with \`sha256sum -c SHA256SUMS --ignore-missing\`. Ubuntu users can install and update through apt: see the download page." \
-            "${files[@]}"
-      - name: Publish the release in this repository too
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_ID: ${{ needs.create-release.outputs.release_id }}
-        run: gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" -F draft=false > /dev/null
-
-  # The Node library is not published to npm from CI. It is published by hand, and this job only
-  # mirrors a tarball of it next to the desktop builds in the public repository.
-  attach-node-library:
-    needs: [prepare, publish]
-    if: needs.prepare.outputs.release == 'true'
-    runs-on: ubuntu-latest
-    env:
-      TAG: ${{ needs.prepare.outputs.tag }}
-      PUBLIC_REPO: adhil72/gitvault-website
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ env.TAG }}
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - name: Check the tag matches the package version
-        run: |
-          version=$(jq -r .version packages/node/package.json)
-          test "v$version" = "$TAG" || { echo "::error::Tag $TAG does not match package version $version"; exit 1; }
-      - run: pnpm --filter @adhil28/gitvault build
-      # Mirror the library next to the desktop builds in the public repository,
-      # as a downloadable tarball with its checksum. Needs the release that the
-      # publish job creates, so this job waits for it.
-      - name: Attach the library tarball to the public release
-        working-directory: packages/node
-        env:
-          GH_TOKEN: ${{ secrets.WEBSITE_TOKEN }}
-        run: |
-          if [ -z "$GH_TOKEN" ]; then
-            echo "::warning::WEBSITE_TOKEN is not set; the library tarball was not sent to $PUBLIC_REPO"
-            exit 0
-          fi
-          version="${TAG#v}"
-          tgz=$(npm pack --silent)
-          cp "$tgz" "gitvault-node-$version.tgz"
-          sha256sum "gitvault-node-$version.tgz" > gitvault-node-SHA256SUMS
-          cat gitvault-node-SHA256SUMS
-          gh release upload "$TAG" --repo "$PUBLIC_REPO" --clobber \
-            "gitvault-node-$version.tgz" gitvault-node-SHA256SUMS
+            --notes "GitVault $TAG CLI binaries. Verify with \`sha256sum -c SHA256SUMS --ignore-missing\`." \
+            artifacts/*

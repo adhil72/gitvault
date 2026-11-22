@@ -5,6 +5,15 @@ All notable changes to GitVault are listed here, newest first. The format follow
 [Semantic Versioning](https://semver.org/). The same history is published at
 https://adhil72.github.io/gitvault-website/changelog/.
 
+## [2.0.0] - 2026-11-22
+
+### Changed
+
+- **Full CLI redesign (`gitvault` / `gv`).** Replaced the multi-crate workspace, Tauri desktop app, and Node/JVM SDK integrations with a fast, single-binary Rust CLI.
+- **Powered exclusively by `git` and `gh`.** Removed internal GitHub OAuth device flows, token storage, and account management. GitVault now delegates all authentication and repository operations directly to installed `git` and `gh` CLIs.
+- **Zero `.env` workflow.** `gitvault init` writes only a non-secret `gitvault.json` (`project` + `environment`), `gitvault config` provides interactive menus (`Config variables` → select/create environment) and direct shortcuts, and `gitvault load` injects secrets in RAM via `-- <command>`, `eval "$(gitvault shell-init)"`, `--export`, or `--json`.
+- **Per-environment AEAD encryption.** Secrets are stored hidden in `~/.local/share/gitvault/store` as `projects/<project>/envs/<env>.enc` (AES-256-GCM with `gitvault:v2:<project>:<environment>` AAD, Argon2id master KDF, and 160-bit recovery key).
+
 ## [1.1.0] - 2026-11-13
 
 ### Added

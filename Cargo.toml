@@ -1,41 +1,39 @@
-[workspace]
-resolver = "2"
-members = [
-  "crates/gitvault-crypto",
-  "crates/gitvault-core",
-  "crates/gitvault-infra",
-  "crates/gitvault-cli",
-  "apps/desktop/src-tauri",
-]
-
-[workspace.package]
-version = "1.1.0"
+[package]
+name = "gitvault"
+version = "2.0.0"
 edition = "2021"
 license = "MIT"
 rust-version = "1.85"
+description = "Zero-.env encrypted secrets CLI powered exclusively by git and gh."
 
-[workspace.dependencies]
-# Internal crates (dependency direction: crypto <- core <- infra <- cli / desktop)
-gitvault-crypto = { path = "crates/gitvault-crypto" }
-gitvault-core = { path = "crates/gitvault-core" }
-gitvault-infra = { path = "crates/gitvault-infra" }
+[workspace]
 
-# Shared third-party crates (versions are pinned here once)
+[[bin]]
+name = "gitvault"
+path = "src/main.rs"
+
+[dependencies]
+aes-gcm = "0.10"
+anyhow = "1"
+argon2 = "0.5"
+base64 = "0.22"
+clap = { version = "4", features = ["derive", "env"] }
+hkdf = "0.12"
+rand = "0.8"
+rpassword = "7"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+sha2 = "0.10"
 thiserror = "2"
-anyhow = "1"
-async-trait = "0.1"
-uuid = { version = "1", features = ["v4"] }
-schemars = "0.8"
-ts-rs = "10"
 zeroize = { version = "1", features = ["derive"] }
-clap = { version = "4", features = ["derive"] }
 
-[workspace.lints.rust]
+[dev-dependencies]
+tempfile = "3"
+
+[lints.rust]
 unsafe_code = "forbid"
 
-[workspace.lints.clippy]
+[lints.clippy]
 unwrap_used = "deny"
 expect_used = "deny"
 panic = "deny"
@@ -44,11 +42,3 @@ todo = "deny"
 too_many_arguments = "deny"
 too_many_lines = "warn"
 cognitive_complexity = "warn"
-
-# Applies to the Tauri app (profiles must live at the workspace root)
-[profile.release]
-codegen-units = 1
-lto = true
-opt-level = 3
-panic = "abort"
-strip = true

@@ -1,3 +1,0 @@
-[env]
-# ts-rs writes generated TypeScript types here (run `cargo test export_bindings`).
-TS_RS_EXPORT_DIR = { value = "apps/desktop/src/types/generated", relative = true }

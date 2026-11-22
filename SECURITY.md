@@ -16,8 +16,8 @@ Report it privately through GitHub:
 
 Please include:
 
-- The affected component (desktop app, `gitvault` CLI, Node library, Vite plugin, vault format).
-- The GitVault version and your operating system.
+- The affected component (`gitvault` CLI, crypto/vault format, `git`/`gh` driver, shell integration).
+- The GitVault version (`gitvault --version`) and your operating system.
 - Steps to reproduce, and the impact you expect.
 
 Never include real secrets, master passwords or recovery keys in a report. Use throwaway
@@ -36,22 +36,20 @@ Please give us reasonable time to release a fix before disclosing the issue publ
 
 In scope:
 
-- Weaknesses in the vault format or cryptography (see `docs/vault-format.md`): key handling,
-  password or recovery-key unwrapping, nonce use, tampering that goes undetected.
-- Secret values, passwords, tokens or recovery keys being logged, cached, written to disk in
-  plaintext, or exposed through URLs or command-line arguments.
-- Flaws in the desktop app, CLI, Node library or Vite plugin that expose vault contents or
-  let another local process or website read them.
-- Problems in the installers or the updater that allow tampered builds to be installed.
+- Weaknesses in the v2 vault format or cryptography: Argon2id key derivation, AES-256-GCM
+  encryption, AAD binding (`gitvault:v2:<project>:<environment>`), recovery-key unwrapping,
+  nonce reuse, or tampering that goes undetected.
+- Secret values, passwords, or recovery keys being logged, written to `.env` or plaintext
+  files on disk, or exposed via shell injection during `gitvault load --export`.
+- Incorrect filesystem permissions on `~/.local/share/gitvault/store` (`0700`) or
+  `~/.local/share/gitvault/session.key` (`0600`).
 
 Out of scope:
 
-- Attacks that need an already-compromised machine (malware, keyloggers, root access) or
-  physical access to an unlocked session.
+- Attacks that require an already-compromised machine (malware, keyloggers, root access) or
+  physical access to an unlocked `session.key`.
 - Weak master passwords chosen by the user.
-- Vulnerabilities in third-party services such as GitHub, or in dependencies with no
-  demonstrated impact on GitVault.
-- Denial of service through resource exhaustion on your own machine.
+- Vulnerabilities in `git`, `gh`, or GitHub itself.
 
 ## Safe harbour
 

@@ -1,45 +1,99 @@
-#!/bin/sh
-# Installs GitVault (the `gitvault` command and its short alias `gv`) on a Linux server or desktop.
+#!/usr/bin/env sh
+# GitVault v2 installer: requires `git` and `gh` CLIs to be installed first.
 #
+# Remote install:
 #   curl -fsSL https://raw.githubusercontent.com/adhil72/gitvault/main/scripts/install.sh | sh
-#
-# Debian/Ubuntu: installs the signed apt package (also pulls in git and gh) and updates with apt.
-# Other Linux: builds the CLI with cargo.
+# Local checkout install:
+#   ./scripts/install.sh
 set -eu
 
-BASE="https://github.com/adhil72/gitvault-website/releases/latest/download"
-KEYRING="/usr/share/keyrings/gitvault-archive-keyring.gpg"
+REPO_URL="https://github.com/adhil72/gitvault"
+RELEASE_BASE="https://github.com/adhil72/gitvault-website/releases/latest/download"
 
-say() { printf '%s\n' "$*"; }
-fail() { printf 'error: %s\n' "$*" >&2; exit 1; }
-have() { command -v "$1" >/dev/null 2>&1; }
-
-# Runs a command as root, through sudo when we are not root.
-as_root() {
-  if [ "$(id -u)" -eq 0 ]; then "$@"; elif have sudo; then sudo "$@"; else fail "run this as root or install sudo"; fi
+fail() {
+  printf '✗ %s\n' "$1" >&2
+  exit 1
 }
 
-install_apt() {
-  have curl || as_root apt-get install -y curl
-  as_root curl -fsSL "$BASE/gitvault-archive-keyring.gpg" -o "$KEYRING"
-  echo "deb [signed-by=$KEYRING] $BASE ./" | as_root tee /etc/apt/sources.list.d/gitvault.list >/dev/null
-  as_root apt-get update
-  as_root apt-get install -y git-vault
+have() {
+  command -v "$1" >/dev/null 2>&1
 }
 
-install_cargo() {
-  have git || fail "git is required"
-  have cargo || fail "no apt and no cargo found: install Rust (https://rustup.rs) and run this again"
-  cargo install --locked --git https://github.com/adhil72/gitvault gitvault-cli
-  bin="${CARGO_HOME:-$HOME/.cargo}/bin"
-  ln -sf "$bin/gitvault" "$bin/gv"
+have git || fail "git is required. Install Git from https://git-scm.com/downloads and retry."
+have gh || fail "GitHub CLI (gh) is required. Install gh from https://cli.github.com and retry."
+
+detect_target() {
+  os=$(uname -s | tr '[:upper:]' '[:lower:]')
+  arch=$(uname -m)
+  case "$os:$arch" in
+    linux:x86_64)   printf '%s' "gitvault-x86_64-unknown-linux-gnu.tar.gz" ;;
+    linux:aarch64)  printf '%s' "gitvault-aarch64-unknown-linux-gnu.tar.gz" ;;
+    darwin:arm64)   printf '%s' "gitvault-aarch64-apple-darwin.tar.gz" ;;
+    darwin:x86_64)  printf '%s' "gitvault-x86_64-apple-darwin.tar.gz" ;;
+    *)              printf '' ;;
+  esac
 }
 
-if have apt-get; then install_apt; else install_cargo; fi
+install_from_release() {
+  asset=$(detect_target)
+  [ -n "$asset" ] || return 1
+  have curl || return 1
+  have tar || return 1
 
-say ""
-say "GitVault is installed. Next:"
-have gh || say "  1. install the GitHub CLI: https://cli.github.com"
-say "  gh auth login          # once; gv reuses it"
-say "  gv vault create --name Personal"
-say "  cd your-project && gv trust"
+  tmp=$(mktemp -d)
+  trap 'rm -rf "$tmp"' EXIT INT TERM
+  if curl -fsSL "$RELEASE_BASE/$asset" -o "$tmp/$asset"; then
+    bin_dir="${HOME}/.local/bin"
+    mkdir -p "$bin_dir"
+    tar -xzf "$tmp/$asset" -C "$tmp"
+    install -m 0755 "$tmp/gitvault" "$bin_dir/gitvault"
+    ln -sf "$bin_dir/gitvault" "$bin_dir/gv"
+    printf '✓ Installed gitvault and alias '\''gv'\'' to %s\n' "$bin_dir"
+    case ":${PATH}:" in
+      *":$bin_dir:"*) ;;
+      *) printf '! Add %s to your PATH if not already present.\n' "$bin_dir" ;;
+    esac
+    return 0
+  fi
+  return 1
+}
+
+install_with_cargo() {
+  have cargo || fail "cargo not found (and prebuilt release unavailable). Install Rust from https://rustup.rs and retry."
+  if [ -n "${LOCAL_ROOT:-}" ]; then
+    cargo install --path "$LOCAL_ROOT" --locked --force
+  else
+    cargo install --git "$REPO_URL" --locked --force
+  fi
+  bin_dir="${CARGO_HOME:-$HOME/.cargo}/bin"
+  if [ -x "$bin_dir/gitvault" ]; then
+    ln -sf "$bin_dir/gitvault" "$bin_dir/gv"
+    printf '✓ Installed gitvault and alias '\''gv'\'' to %s\n' "$bin_dir"
+  fi
+}
+
+LOCAL_ROOT=""
+case "$0" in
+  */*)
+    script_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
+    root_dir=$(CDPATH='' cd -- "$script_dir/.." && pwd)
+    if [ -f "$root_dir/Cargo.toml" ] && grep -q '^name = "gitvault"' "$root_dir/Cargo.toml"; then
+      LOCAL_ROOT="$root_dir"
+    fi
+    ;;
+esac
+
+if [ -n "$LOCAL_ROOT" ]; then
+  printf '◆ Building and installing gitvault v2 from local checkout...\n'
+  install_with_cargo
+elif ! install_from_release; then
+  printf '◆ Installing gitvault v2 from source via cargo...\n'
+  install_with_cargo
+fi
+
+if ! gh auth status >/dev/null 2>&1; then
+  printf '! GitHub CLI is not signed in yet. Run: gh auth login\n'
+fi
+
+printf '\nOptional (recommended): add this line to ~/.bashrc or ~/.zshrc so '\''gitvault load'\'' updates your active shell in RAM:\n'
+printf '  eval "$(gitvault shell-init)"\n'
