@@ -88,8 +88,7 @@ impl VaultStore {
             return Ok(());
         }
         if !skip_gh_check() {
-            let user = GhDriver::current_user()?;
-            let full_name = format!("{user}/{}", repo_name_setting());
+            let (_, full_name) = resolve_remote_full_name()?;
             GhDriver::setup_git_auth()?;
             if GhDriver::repo_exists(&full_name)? {
                 ui::info(&format!("Cloning vault repository '{full_name}'..."));
@@ -108,9 +107,7 @@ impl VaultStore {
         if skip_gh_check() {
             return GitDriver::ensure_initialized(&self.paths.store_dir);
         }
-        let user = GhDriver::current_user()?;
-        let repo_name = repo_name_setting();
-        let full_name = format!("{user}/{repo_name}");
+        let (repo_name, full_name) = resolve_remote_full_name()?;
         GhDriver::setup_git_auth()?;
 
         if self.paths.store_dir.join(".git").exists() {
@@ -424,4 +421,14 @@ fn read_unlock_password(opts: PasswordOptions) -> Result<Zeroizing<String>, AppE
         });
     }
     ui::password("Master password")
+}
+
+fn resolve_remote_full_name() -> Result<(String, String), AppError> {
+    let repo_setting = repo_name_setting();
+    if let Some((_, repo)) = repo_setting.split_once('/') {
+        return Ok((repo.to_owned(), repo_setting));
+    }
+    let user = GhDriver::current_user()?;
+    let full_name = format!("{user}/{repo_setting}");
+    Ok((repo_setting, full_name))
 }

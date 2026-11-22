@@ -87,6 +87,11 @@ eval "$(gitvault load -p my-api -e production --export)"
 gitvault load -p my-api -e production --json
 ```
 
+## Never Lose `.env` & Share With Teammates
+
+- **Never forget or lose a `.env` again:** Because every environment is backed up encrypted in your private GitHub repo (`gitvault-store`), switching laptops or wiping your machine never loses your project secrets — just clone the project repo (which contains `gitvault.json`) and run `gitvault load`.
+- **Share a project effortlessly:** Instead of pasting `.env` files in WhatsApp, Slack, or Discord when onboarding another developer, add them as a collaborator/contributor on your private GitHub vault repository and share your vault password. They run `GITVAULT_REPO=<owner>/gitvault-store gitvault load` and immediately have every variable in memory.
+
 ## Security Design
 
 - **Key hierarchy:** Master password → **Argon2id** (64 MiB, 3 iterations) → KEK wraps a random 256-bit `VaultKey` (plus a 160-bit `RecoveryKey` via HKDF-SHA256).

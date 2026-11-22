@@ -94,3 +94,30 @@ fn scenario_sync_status_and_offline_commit_recovery() {
         "saved_offline"
     );
 }
+
+#[test]
+fn scenario_collaborator_uses_owner_slash_repo() {
+    let h = ScenarioHarness::new();
+    h.init_project(&h.home1, "shared-app", "development", "team-pass-123");
+    h.run_ok(
+        &h.home1,
+        &h.project_dir,
+        &["config", "set", "TOKEN=tok_team"],
+    );
+
+    let collab_read = h
+        .cmd(&h.home2, &h.project_dir)
+        .env("GITVAULT_PASSWORD", "team-pass-123")
+        .env("GITVAULT_REPO", "adhil72/gitvault-store")
+        .args(["--non-interactive", "load", "--", "printenv", "TOKEN"])
+        .output()
+        .unwrap();
+    assert!(collab_read.status.success());
+    let stderr = String::from_utf8_lossy(&collab_read.stderr);
+    assert!(stderr.contains("adhil72/gitvault-store"));
+    assert!(!stderr.contains("octocat/adhil72"));
+    assert_eq!(
+        String::from_utf8_lossy(&collab_read.stdout).trim(),
+        "tok_team"
+    );
+}
