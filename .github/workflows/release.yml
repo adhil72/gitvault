@@ -102,7 +102,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "$TAG" --title "GitVault $TAG" \
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --latest --title "GitVault $TAG" \
             --notes "GitVault $TAG — Pure CLI, Zero .env, Powered by git and gh. Verify with \`sha256sum -c SHA256SUMS --ignore-missing\`." \
             artifacts/*
       - name: Mirror release to public website repo
